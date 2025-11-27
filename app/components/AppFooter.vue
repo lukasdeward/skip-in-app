@@ -33,7 +33,7 @@ const columns = computed(() => user.value ? [legalColumn] : [resourcesColumn, le
 
 <template>
   <USeparator
-    icon="i-arrow-up-down"
+    icon="i-famicons-arrow-redo"
     class="h-px"
   />
 
