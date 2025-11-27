@@ -6,7 +6,8 @@ export default defineNuxtConfig({
     '@nuxt/ui',
     '@nuxt/content',
     '@vueuse/nuxt',
-    'nuxt-og-image'
+    'nuxt-og-image',
+    '@nuxtjs/supabase'
   ],
 
   devtools: {
@@ -15,11 +16,13 @@ export default defineNuxtConfig({
 
   css: ['~/assets/css/main.css'],
 
-  routeRules: {
-    '/docs': { redirect: '/docs/getting-started', prerender: false }
-  },
-
   compatibilityDate: '2024-07-11',
+
+  supabase: {
+    redirect: false,
+    url: process.env.SUPABASE_URL,
+    key: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY
+  },
 
   nitro: {
     prerender: {

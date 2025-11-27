@@ -19,25 +19,25 @@ useSeoMeta({
   description: 'We are sorry but this page could not be found.'
 })
 
-const { data: navigation } = await useAsyncData('navigation', () => queryCollectionNavigation('docs'), {
-  transform: data => data.find(item => item.path === '/docs')?.children || []
-})
-const { data: files } = useLazyAsyncData('search', () => queryCollectionSearchSections('docs'), {
-  server: false
-})
+const navigation = ref([])
+const files = ref([])
 
 const links = [{
-  label: 'Docs',
-  icon: 'i-lucide-book',
-  to: '/docs/getting-started'
+  label: 'Home',
+  icon: 'i-lucide-home',
+  to: '/'
 }, {
-  label: 'Pricing',
-  icon: 'i-lucide-credit-card',
-  to: '/pricing'
+  label: 'About Skip',
+  icon: 'i-lucide-info',
+  to: '/about'
 }, {
   label: 'Blog',
   icon: 'i-lucide-pencil',
   to: '/blog'
+}, {
+  label: 'Pricing',
+  icon: 'i-lucide-credit-card',
+  to: '/pricing'
 }]
 </script>
 

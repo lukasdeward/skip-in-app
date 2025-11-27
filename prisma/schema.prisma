@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TeamRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Customer {
+  id               String       @id @default(cuid())
+  email            String       @unique
+  stripeCustomerId String       @unique @map("stripe_customer_id")
+  name             String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  teams        Team[]
+  memberships  TeamMember[]
+}
+
+model Team {
+  id                     String    @id @default(cuid())
+  customerId             String
+  name                   String
+  primaryColor           String?   @map("primary_color")
+  logoUrl                String?   @map("logo_url")
+  font                   String?
+  stripeSubscriptionId   String    @unique @map("stripe_subscription_id")
+  stripePriceId          String?   @map("stripe_price_id")
+  stripeCurrentPeriodEnd DateTime? @map("stripe_current_period_end")
+  cancelAtPeriodEnd      Boolean   @default(false) @map("cancel_at_period_end")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  customer Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  members  TeamMember[]
+  links    TeamLink[]
+}
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  teamId      String
+  customerId  String
+  role        TeamRole @default(MEMBER)
+  createdAt   DateTime @default(now())
+
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, customerId])
+}
+
+model TeamLink {
+  id         String   @id @default(cuid())
+  teamId     String
+  slug       String
+  targetUrl  String   @map("target_url")
+  title      String?
+  description String?
+  clickCount Int      @default(0) @map("click_count")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, slug])
+}

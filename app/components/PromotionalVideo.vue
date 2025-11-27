@@ -2,10 +2,8 @@
   <div class="relative">
     <UPageCard
       variant="subtle"
-      class="rounded-2xl"
     >
       <video
-        class="rounded-xl"
         data-v-baf90ddd=""
         preload="none"
         poster="https://res.cloudinary.com/nuxt/video/upload/so_3.3/v1708511800/ui-pro/video-nuxt-ui-pro_kwfbdh.jpg"

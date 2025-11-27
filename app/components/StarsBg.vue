@@ -131,7 +131,7 @@ const starLayers = computed(() => [
         <div
           v-for="(star, starIndex) in layer.stars"
           :key="starIndex"
-          class="star absolute rounded-full"
+          class="star absolute"
           :style="{
             left: `${star.x}px`,
             top: `${star.y}px`,

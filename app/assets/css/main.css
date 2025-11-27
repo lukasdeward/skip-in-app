@@ -3,6 +3,15 @@
 
 @source "../../../content/**/*";
 
+:root,
+.light {
+  --ui-radius: 0;
+}
+
+.dark {
+  --ui-radius: 0;
+}
+
 @theme static {
   --font-sans: 'Public Sans', sans-serif;
 

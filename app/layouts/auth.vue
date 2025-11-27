@@ -6,7 +6,7 @@
       size="xl"
       color="neutral"
       variant="subtle"
-      class="absolute left-8 top-8 rounded-full z-10"
+      class="absolute left-8 top-8 z-10"
     />
 
     <UPageCard

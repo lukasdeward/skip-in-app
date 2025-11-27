@@ -2,18 +2,21 @@
 const route = useRoute()
 
 const items = computed(() => [{
-  label: 'Docs',
-  to: '/docs',
-  active: route.path.startsWith('/docs')
+  label: 'Home',
+  to: '/',
+  active: route.path === '/'
 }, {
-  label: 'Pricing',
-  to: '/pricing'
+  label: 'About Skip',
+  to: '/about',
+  active: route.path.startsWith('/about')
 }, {
   label: 'Blog',
-  to: '/blog'
+  to: '/blog',
+  active: route.path.startsWith('/blog')
 }, {
-  label: 'Changelog',
-  to: '/changelog'
+  label: 'Pricing',
+  to: '/pricing',
+  active: route.path.startsWith('/pricing')
 }])
 </script>
 
@@ -21,9 +24,8 @@ const items = computed(() => [{
   <UHeader>
     <template #left>
       <NuxtLink to="/">
-        <AppLogo class="w-auto h-6 shrink-0" />
+        <AppLogo class="shrink-0" />
       </NuxtLink>
-      <TemplateMenu />
     </template>
 
     <UNavigationMenu

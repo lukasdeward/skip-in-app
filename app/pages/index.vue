@@ -1,5 +1,8 @@
 <script setup lang="ts">
 const { data: page } = await useAsyncData('index', () => queryCollection('index').first())
+const router = useRouter()
+const userUrl = ref('')
+const showSignup = ref(false)
 
 const title = page.value?.seo?.title || page.value?.title
 const description = page.value?.seo?.description || page.value?.description
@@ -11,6 +14,12 @@ useSeoMeta({
   description,
   ogDescription: description
 })
+
+function onSubmitLink() {
+  const query = userUrl.value ? { url: userUrl.value } : {}
+  router.replace({ query })
+  showSignup.value = true
+}
 </script>
 
 <template>
@@ -31,8 +40,32 @@ useSeoMeta({
         />
       </template>
 
-      <PromotionalVideo />
+      <form
+        class="w-full max-w-2xl mx-auto"
+        @submit.prevent="onSubmitLink"
+      >
+        <div class="flex flex-col gap-3 md:flex-row md:items-center justify-center">
+          <UInput
+            v-model="userUrl"
+            size="xl"
+            class="w-full md:w-96 text-lg"
+            placeholder="https://yourstore.com/product/book"
+            autofocus
+          />
+
+          <UButton
+            type="submit"
+            size="lg"
+            color="primary"
+            label="Create Skip link"
+            trailing-icon="i-lucide-arrow-right"
+            class="w-full md:w-auto justify-center cursor-pointer"
+          />
+        </div>
+      </form>
     </UPageHero>
+
+    <SignupModal v-model:open="showSignup" />
 
     <UPageSection
       v-for="(section, index) in page.sections"
@@ -47,6 +80,7 @@ useSeoMeta({
     </UPageSection>
 
     <UPageSection
+      v-if="page.features?.items?.length"
       :title="page.features.title"
       :description="page.features.description"
     >

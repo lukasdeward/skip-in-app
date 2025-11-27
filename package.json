@@ -16,6 +16,8 @@
     "@nuxt/content": "^3.8.2",
     "@nuxt/image": "^2.0.0",
     "@nuxt/ui": "^4.2.1",
+    "@nuxtjs/supabase": "^1.4.1",
+    "@supabase/supabase-js": "^2.48.0",
     "@standard-schema/spec": "^1.0.0",
     "@vueuse/nuxt": "^13.9.0",
     "better-sqlite3": "^12.4.6",

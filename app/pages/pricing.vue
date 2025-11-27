@@ -41,8 +41,8 @@ const items = ref([
           size="xs"
           class="w-48"
           :ui="{
-            list: 'ring ring-accented rounded-full',
-            indicator: 'rounded-full',
+            list: 'ring ring-accented rounded-none',
+            indicator: 'rounded-none',
             trigger: 'w-1/2'
           }"
         />
