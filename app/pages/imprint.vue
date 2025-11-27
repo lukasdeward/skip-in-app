@@ -1,27 +1,30 @@
+
 <template>
-  <div
-    v-if="page"
-    class="max-w-xl mx-auto p-3 mb-6"
-  >
-    <h1 class="text-2xl font-bold mb-4">
-      {{ page.title }}
-    </h1>
-    <div v-html="page.body" />
+  <div class="max-w-xl mx-auto p-3 mb-6 prose prose-neutral">
+    <h1>Imprint</h1>
+    <p>
+      OneGuard GmbH<br>
+      Geschäftsführer: Lukas Deward<br>
+      Welserstraße 3, 87463 Dietmannsried, Deutschland<br>
+      E-Mail: <a href="mailto:support@oneguard.app">support@oneguard.app</a>
+    </p>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { useSeoMeta } from 'nuxt/app';
 import { computed } from 'vue'
 
-const { content: page } = useLocalizedContent<any>('imprint')
 
-const seoTitle = computed(() => page.value?.seo?.title || page.value?.title || 'Imprint')
-const seoDescription = computed(() => page.value?.seo?.description || '')
+const fallbackContent = computed(() => ({
+  title: 'Imprint',
+  body: 'Contact support@skip-in.app for imprint details.'
+}))
 
 useSeoMeta({
-  title: seoTitle,
-  ogTitle: seoTitle,
-  description: seoDescription,
-  ogDescription: seoDescription
+  title: fallbackContent.value.title,
+  ogTitle: fallbackContent.value.title,
+  description: fallbackContent.value.body,
+  ogDescription: fallbackContent.value.body
 })
 </script>

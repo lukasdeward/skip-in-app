@@ -13,7 +13,14 @@ export function useLocalizedContent<T = Record<string, any>>(slug: string, fallb
     return acceptLanguage?.split(',')[0]?.split('-')[0] || fallbackLocale
   })
 
-  const { data, pending, error } = useAsyncData(`${slug}-localized-content`, () => queryContent(slug).findOne())
+  const { data, pending, error } = useAsyncData(`${slug}-localized-content`, async () => {
+    try {
+      return await queryContent(slug).findOne()
+    } catch (err) {
+      console.error(`[content] Failed to load slug "${slug}"`, err)
+      return null
+    }
+  })
 
   const content = computed<T | null>(() => {
     const raw = data.value as (T & { translations?: Translations<T> }) | null

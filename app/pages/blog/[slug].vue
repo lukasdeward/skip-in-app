@@ -4,7 +4,7 @@ const route = useRoute()
 const { data: page } = await useAsyncData(route.path, () => queryCollection('posts').path(route.path).first())
 
 if (!page.value) {
-  throw createError({ statusCode: 404, statusMessage: 'Post not found' })
+  throw createError({ statusCode: 404, message: 'Post not found' })
 }
 
 const title = page.value?.seo?.title || page.value?.title
