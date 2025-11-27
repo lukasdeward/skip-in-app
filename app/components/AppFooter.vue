@@ -10,6 +10,18 @@ const columns = [{
     label: 'Pricing',
     to: '/pricing'
   }]
+}, {
+  label: 'Legal',
+  children: [{
+    label: 'Data protection',
+    to: '/data-protection'
+  }, {
+    label: 'Imprint',
+    to: '/imprint'
+  }, {
+    label: 'Terms of Service',
+    to: '/terms-of-service'
+  }]
 }]
 </script>
 

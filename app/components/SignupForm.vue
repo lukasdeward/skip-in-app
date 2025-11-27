@@ -117,7 +117,7 @@ async function signUpWithProvider(provider: 'google' | 'github') {
 
     <template #footer>
       By signing up, you agree to our <ULink
-        to="/"
+        to="/terms-of-service"
         class="text-primary font-medium"
       >Terms of Service</ULink>.
     </template>
