@@ -28,6 +28,7 @@ function onSubmitLink() {
       :title="page.title"
       :description="page.description"
       :links="page.hero.links"
+      :style="{ '--ui-container': '68rem' }"
     >
       <template #top>
         <HeroBackground />

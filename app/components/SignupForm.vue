@@ -9,7 +9,7 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  (e: 'success'): void
+  (e: 'success', email: string): void
 }>()
 
 const toast = useToast()
@@ -63,7 +63,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
   linkSent.value = true
 
   toast.add({ title: 'Magic link sent', description: 'Check your email to finish signing up.' })
-  emit('success')
+  emit('success', payload.data.email)
 
   if (props.redirectOnSuccess) {
     await router.push('/login')

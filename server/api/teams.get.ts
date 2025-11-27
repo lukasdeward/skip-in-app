@@ -1,13 +1,8 @@
 import { createError, defineEventHandler } from 'h3'
-import { serverSupabaseUser } from '#supabase/server'
-
-const getPrisma = async () => {
-  const { PrismaClient } = await import('~~/prisma/client')
-  return new PrismaClient({})
-}
+import { PrismaClient } from '~~/prisma/client'
 
 export default defineEventHandler(async (event) => {
-  const prisma = await getPrisma()
+  const prisma = new PrismaClient()
 
   try {
     return await prisma.team.findMany()
