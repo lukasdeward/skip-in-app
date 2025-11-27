@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import { serverSupabaseUser } from '#supabase/server'
-import { PrismaClient, TeamRole } from '@prisma/client'
+import { TeamRole } from '@prisma/client'
+import prisma from '~/server/utils/prisma'
 
 const validateUrl = (value?: string | null) => {
   if (!value) return null
@@ -32,8 +33,6 @@ export default defineEventHandler(async (event) => {
   const body = await readBody<{
     targetUrl?: string
   }>(event)
-
-  const prisma = new PrismaClient()
 
   try {
     const membership = await prisma.teamMember.findUnique({

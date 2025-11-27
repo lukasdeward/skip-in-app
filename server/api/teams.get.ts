@@ -1,6 +1,6 @@
 import { createError, defineEventHandler } from 'h3'
 import { serverSupabaseUser } from '#supabase/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event).catch(() => null)
@@ -13,8 +13,6 @@ export default defineEventHandler(async (event) => {
     console.warn('[teams.get] DATABASE_URL missing; returning empty list.')
     return []
   }
-
-  const prisma = new PrismaClient()
 
   try {
     return await prisma.team.findMany({

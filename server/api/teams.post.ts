@@ -2,7 +2,7 @@ import { createError, defineEventHandler, readBody } from 'h3'
 import { randomUUID } from 'crypto'
 import { TeamRole } from '~~/prisma/client'
 import { serverSupabaseUser } from '#supabase/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '~/server/utils/prisma'
 
 
 export default defineEventHandler(async (event) => {
@@ -22,8 +22,6 @@ export default defineEventHandler(async (event) => {
   if (!name) {
     throw createError({ statusCode: 400, message: 'Team name is required' })
   }
-
-  const prisma = new PrismaClient()
 
   try {
     const email = user.email || (user.user_metadata as Record<string, any> | undefined)?.email || `${user.id}@example.com`

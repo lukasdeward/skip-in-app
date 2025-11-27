@@ -1,5 +1,5 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
-import { PrismaClient } from '@prisma/client'
+import prisma from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const linkId = getRouterParam(event, 'linkId')
@@ -11,8 +11,6 @@ export default defineEventHandler(async (event) => {
   if (!process.env.DATABASE_URL) {
     throw createError({ statusCode: 503, message: 'Database not configured' })
   }
-
-  const prisma = new PrismaClient()
 
   try {
     const link = await prisma.link.update({

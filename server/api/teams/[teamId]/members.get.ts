@@ -1,6 +1,6 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
 import { serverSupabaseUser } from '#supabase/server'
-import { PrismaClient } from '@prisma/client'
+import prisma from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event).catch(() => null)
@@ -17,8 +17,6 @@ export default defineEventHandler(async (event) => {
   if (!process.env.DATABASE_URL) {
     throw createError({ statusCode: 503, message: 'Database not configured' })
   }
-
-  const prisma = new PrismaClient()
 
   try {
     const membership = await prisma.teamMember.findUnique({

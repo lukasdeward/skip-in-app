@@ -1,6 +1,7 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import { serverSupabaseUser } from '#supabase/server'
-import { PrismaClient, TeamRole } from '@prisma/client'
+import { TeamRole } from '@prisma/client'
+import prisma from '~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event).catch(() => null)
@@ -24,8 +25,6 @@ export default defineEventHandler(async (event) => {
     logoUrl?: string | null
     font?: string | null
   }>(event)
-
-  const prisma = new PrismaClient()
 
   try {
     const membership = await prisma.teamMember.findUnique({
