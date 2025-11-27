@@ -15,6 +15,8 @@ const toast = useToast()
 const supabase = useSupabaseClient()
 const router = useRouter()
 const loading = ref(false)
+const requestURL = useRequestURL()
+const redirectTo = computed(() => process.client ? `${window.location.origin}/dashboard` : `${requestURL.origin}/dashboard`)
 
 const fields = [{
   name: 'email',
@@ -22,15 +24,6 @@ const fields = [{
   label: 'Email',
   placeholder: 'Enter your email',
   required: true
-}, {
-  name: 'password',
-  label: 'Password',
-  type: 'password' as const,
-  placeholder: 'Enter your password'
-}, {
-  name: 'remember',
-  label: 'Remember me',
-  type: 'checkbox' as const
 }]
 
 const providers = [{
@@ -44,17 +37,18 @@ const providers = [{
 }]
 
 const schema = z.object({
-  email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Must be at least 8 characters')
+  email: z.string().email('Invalid email')
 })
 
 type Schema = z.output<typeof schema>
 
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
   loading.value = true
-  const { error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signInWithOtp({
     email: payload.data.email,
-    password: payload.data.password
+    options: {
+      emailRedirectTo: redirectTo.value
+    }
   })
 
   if (error) {
@@ -63,8 +57,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
     return
   }
 
-  toast.add({ title: 'Signed in', description: 'You are now logged in.' })
-  await router.push('/')
+  toast.add({ title: 'Magic link sent', description: 'Check your email to finish signing in.' })
   loading.value = false
 }
 
@@ -74,7 +67,7 @@ async function signInWithProvider(provider: 'google' | 'github') {
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: window.location.origin
+      redirectTo: redirectTo.value
     }
   })
 
@@ -92,7 +85,7 @@ async function signInWithProvider(provider: 'google' | 'github') {
     :providers="providers"
     title="Welcome back"
     icon="i-lucide-lock"
-    :submit="{ label: 'Sign in', loading }"
+    :submit="{ label: 'Send magic link', loading }"
     @submit="onSubmit"
   >
     <template #description>
@@ -100,14 +93,6 @@ async function signInWithProvider(provider: 'google' | 'github') {
         to="/signup"
         class="text-primary font-medium"
       >Sign up</ULink>.
-    </template>
-
-    <template #password-hint>
-      <ULink
-        to="/"
-        class="text-primary font-medium"
-        tabindex="-1"
-      >Forgot password?</ULink>
     </template>
 
     <template #footer>

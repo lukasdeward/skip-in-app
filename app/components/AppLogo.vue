@@ -8,7 +8,7 @@ const logoSrc = computed(() => colorMode.value === 'dark' ? '/skip-in-app-white.
   <NuxtImg
     :src="logoSrc"
     alt="Skip In-App logo"
-    class="h-14 w-auto"
+    class="h-18 w-auto"
     format="png"
     draggable="false"
   />
