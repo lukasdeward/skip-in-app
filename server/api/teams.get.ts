@@ -1,6 +1,6 @@
 import { createError, defineEventHandler } from 'h3'
 import { serverSupabaseUser } from '#supabase/server'
-import prisma from '~/server/utils/prisma'
+import prisma from '~~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event).catch(() => null)

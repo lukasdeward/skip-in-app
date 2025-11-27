@@ -42,15 +42,13 @@ export default defineNuxtConfig({
       external: [
         '@prisma/client',
         '.prisma/client',
-        'prisma',
-        'better-sqlite3'
+        'prisma'
       ]
     },
     moduleSideEffects: [
       '@prisma/client',
       '.prisma/client',
-      'prisma',
-      'better-sqlite3'
+      'prisma'
     ]
   },
 

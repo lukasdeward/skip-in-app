@@ -1,5 +1,5 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
-import prisma from '~/server/utils/prisma'
+import prisma from '~~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const linkId = getRouterParam(event, 'linkId')
