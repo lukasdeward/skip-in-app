@@ -16,22 +16,16 @@ const toast = useToast()
 const supabase = useSupabaseClient()
 const router = useRouter()
 const loading = ref(false)
+const requestURL = useRequestURL()
+const redirectTo = computed(() => process.client ? `${window.location.origin}/dashboard` : `${requestURL.origin}/dashboard`)
+const linkSent = ref(false)
+const lastEmail = ref('')
 
 const fields = [{
-  name: 'name',
-  type: 'text' as const,
-  label: 'Name',
-  placeholder: 'Enter your name'
-}, {
   name: 'email',
   type: 'text' as const,
   label: 'Email',
   placeholder: 'Enter your email'
-}, {
-  name: 'password',
-  label: 'Password',
-  type: 'password' as const,
-  placeholder: 'Enter your password'
 }]
 
 const providers = [{
@@ -45,20 +39,17 @@ const providers = [{
 }]
 
 const schema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email'),
-  password: z.string().min(8, 'Must be at least 8 characters')
+  email: z.string().email('Invalid email')
 })
 
 type Schema = z.output<typeof schema>
 
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
   loading.value = true
-  const { error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signInWithOtp({
     email: payload.data.email,
-    password: payload.data.password,
     options: {
-      data: { name: payload.data.name }
+      emailRedirectTo: redirectTo.value
     }
   })
 
@@ -68,7 +59,10 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
     return
   }
 
-  toast.add({ title: 'Check your email', description: 'We sent a confirmation link to finish signup.' })
+  lastEmail.value = payload.data.email
+  linkSent.value = true
+
+  toast.add({ title: 'Magic link sent', description: 'Check your email to finish signing up.' })
   emit('success')
 
   if (props.redirectOnSuccess) {
@@ -104,6 +98,16 @@ async function signUpWithProvider(provider: 'google' | 'github') {
     :submit="{ label: 'Create account', loading }"
     @submit="onSubmit"
   >
+    <UAlert
+      v-if="linkSent"
+      color="success"
+      variant="subtle"
+      icon="i-lucide-mail"
+      title="Magic link sent"
+      :description="`Open your inbox${lastEmail ? ` (${lastEmail})` : ''} and click the link to continue.`"
+      class="mb-4"
+    />
+
     <template #description>
       Already have an account? <ULink
         to="/login"

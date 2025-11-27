@@ -1,0 +1,12 @@
+slug: imprint
+translations:
+  en:
+    seo:
+      title: Impressum
+      description: Impressum und Anbieterkennzeichnung von OneGuard.
+    title: Impressum
+    body: |-
+      OneGuard GmbH<br>
+      Geschäftsführer: Lukas Deward<br>
+      Welserstraße 3, 87463 Dietmannsried, Deutschland<br>
+      E-Mail: <a href="mailto:support@oneguard.app">support@oneguard.app</a>

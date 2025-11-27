@@ -21,7 +21,6 @@ const model = computed({
       <UCard>
         <SignupForm
           :redirect-on-success="false"
-          @success="model = false"
         />
       </UCard>
     </template>
