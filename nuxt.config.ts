@@ -37,7 +37,11 @@ export default defineNuxtConfig({
         '/'
       ],
       crawlLinks: true
-    }
+    },
+    externals: {
+      external: ['@prisma/client', '.prisma/client', 'prisma']
+    },
+    moduleSideEffects: ['@prisma/client', '.prisma/client', 'prisma']
   },
 
   eslint: {
