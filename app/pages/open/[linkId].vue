@@ -3,9 +3,7 @@ definePageMeta({
   layout: 'open'
 })
 
-useSeoMeta({
-  title: 'Opening link | Skip'
-})
+
 
 const route = useRoute()
 const linkId = computed(() => route.params.linkId as string)
@@ -171,6 +169,10 @@ const detectedLabels = computed(() => {
     { label: 'User agent', value: detected.value.userAgent },
     { label: 'UA brands', value: detected.value.brands.join(', ') || 'None' }
   ]
+})
+
+useSeoMeta({
+  title: data.value?.targetUrl ?? 'Redirecting...'
 })
 </script>
 
