@@ -32,10 +32,6 @@ const providers = [{
   label: 'Google',
   icon: 'i-simple-icons-google',
   onClick: () => signUpWithProvider('google')
-}, {
-  label: 'GitHub',
-  icon: 'i-simple-icons-github',
-  onClick: () => signUpWithProvider('github')
 }]
 
 const schema = z.object({
