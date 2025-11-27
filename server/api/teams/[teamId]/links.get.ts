@@ -1,6 +1,6 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
 import { serverSupabaseUser } from '#supabase/server'
-import { PrismaClient } from '~~/prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event).catch(() => null)

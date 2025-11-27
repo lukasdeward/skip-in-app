@@ -43,23 +43,14 @@ export default defineNuxtConfig({
         '@prisma/client',
         '.prisma/client',
         'prisma',
-        'better-sqlite3',
-        // Custom Prisma output path used via alias imports
-        '~/prisma/client',
-        '~~/prisma/client',
-        './prisma/client',
-        '../prisma/client'
+        'better-sqlite3'
       ]
     },
     moduleSideEffects: [
       '@prisma/client',
       '.prisma/client',
       'prisma',
-      'better-sqlite3',
-      '~/prisma/client',
-      '~~/prisma/client',
-      './prisma/client',
-      '../prisma/client'
+      'better-sqlite3'
     ]
   },
 

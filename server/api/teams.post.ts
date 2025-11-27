@@ -2,7 +2,7 @@ import { createError, defineEventHandler, readBody } from 'h3'
 import { randomUUID } from 'crypto'
 import { TeamRole } from '~~/prisma/client'
 import { serverSupabaseUser } from '#supabase/server'
-import { PrismaClient } from '~~/prisma/client'
+import { PrismaClient } from '@prisma/client'
 
 
 export default defineEventHandler(async (event) => {

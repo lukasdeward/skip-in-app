@@ -1,6 +1,6 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import { serverSupabaseUser } from '#supabase/server'
-import { PrismaClient, TeamRole } from '~~/prisma/client'
+import { PrismaClient, TeamRole } from '@prisma/client'
 
 const validateUrl = (value?: string | null) => {
   if (!value) return null
