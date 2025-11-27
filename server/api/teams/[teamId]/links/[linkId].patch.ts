@@ -2,8 +2,6 @@ import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import { serverSupabaseUser } from '#supabase/server'
 import { PrismaClient, TeamRole } from '~~/prisma/client'
 
-const slugRegex = /^[a-zA-Z0-9-]{1,64}$/
-
 const validateUrl = (value?: string | null) => {
   if (!value) return null
   try {
@@ -32,10 +30,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody<{
-    slug?: string
     targetUrl?: string
-    title?: string | null
-    description?: string | null
   }>(event)
 
   const prisma = new PrismaClient()
@@ -61,28 +56,12 @@ export default defineEventHandler(async (event) => {
 
     const updates: Record<string, any> = {}
 
-    if (body.slug !== undefined) {
-      const slug = body.slug?.toString().trim()
-      if (!slug || !slugRegex.test(slug)) {
-        throw createError({ statusCode: 400, message: 'Slug must be alphanumeric and can include dashes' })
-      }
-      updates.slug = slug
-    }
-
     if (body.targetUrl !== undefined) {
       const targetUrl = validateUrl((body.targetUrl || '').toString().trim())
       if (!targetUrl) {
         throw createError({ statusCode: 400, message: 'A valid target URL is required' })
       }
       updates.targetUrl = targetUrl
-    }
-
-    if (body.title !== undefined) {
-      updates.title = body.title?.trim() || null
-    }
-
-    if (body.description !== undefined) {
-      updates.description = body.description?.trim() || null
     }
 
     if (Object.keys(updates).length === 0) {
@@ -96,16 +75,13 @@ export default defineEventHandler(async (event) => {
 
     return {
       id: link.id,
-      slug: link.slug,
       targetUrl: link.targetUrl,
-      title: link.title,
-      description: link.description,
       clickCount: link.clickCount,
       createdAt: link.createdAt
     }
   } catch (error: any) {
     if (error?.code === 'P2002') {
-      throw createError({ statusCode: 409, message: 'Slug already exists for this team' })
+      throw createError({ statusCode: 409, message: 'Link already exists for this team' })
     }
 
     if (error?.statusCode) {

@@ -51,18 +51,13 @@ model TeamMember {
 }
 
 model Link {
-  id          String   @id @default(cuid())
-  teamId      String
-  slug        String
-  targetUrl   String   @map("target_url")
-  title       String?
-  description String?
-  clickCount  Int      @default(0) @map("click_count")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-
-  @@unique([teamId, slug])
+  id         String   @id @default(cuid())
+  teamId     String
+  targetUrl  String   @map("target_url")
+  clickCount Int      @default(0) @map("click_count")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
 }
 
 enum TeamRole {

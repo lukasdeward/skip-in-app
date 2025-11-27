@@ -1,5 +1,7 @@
 <script setup lang="ts">
-const columns = [{
+const user = useSupabaseUser()
+
+const resourcesColumn = {
   label: 'Resources',
   children: [{
     label: 'Help center'
@@ -10,7 +12,9 @@ const columns = [{
     label: 'Pricing',
     to: '/pricing'
   }]
-}, {
+}
+
+const legalColumn = {
   label: 'Legal',
   children: [{
     label: 'Data protection',
@@ -22,7 +26,9 @@ const columns = [{
     label: 'Terms of Service',
     to: '/terms-of-service'
   }]
-}]
+}
+
+const columns = computed(() => user.value ? [legalColumn] : [resourcesColumn, legalColumn])
 </script>
 
 <template>

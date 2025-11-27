@@ -2,8 +2,6 @@ import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import { serverSupabaseUser } from '#supabase/server'
 import { PrismaClient, TeamRole } from '~~/prisma/client'
 
-const slugRegex = /^[a-zA-Z0-9-]{1,64}$/
-
 const validateUrl = (value?: string | null) => {
   if (!value) return null
   try {
@@ -31,10 +29,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody<{
-    slug?: string
     targetUrl?: string
-    title?: string | null
-    description?: string | null
   }>(event)
 
   const prisma = new PrismaClient()
@@ -52,42 +47,28 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 403, message: 'Insufficient permissions' })
     }
 
-    const slug = body.slug?.trim()
     const targetUrl = validateUrl(body.targetUrl?.trim())
-
-    if (!slug || !slugRegex.test(slug)) {
-      throw createError({ statusCode: 400, message: 'Slug must be alphanumeric and can include dashes' })
-    }
 
     if (!targetUrl) {
       throw createError({ statusCode: 400, message: 'A valid target URL is required' })
     }
 
-    const title = body.title?.trim() || null
-    const description = body.description?.trim() || null
-
     const link = await prisma.link.create({
       data: {
         teamId,
-        slug,
-        targetUrl,
-        title,
-        description
+        targetUrl
       }
     })
 
     return {
       id: link.id,
-      slug: link.slug,
       targetUrl: link.targetUrl,
-      title: link.title,
-      description: link.description,
       clickCount: link.clickCount,
       createdAt: link.createdAt
     }
   } catch (error: any) {
     if (error?.code === 'P2002') {
-      throw createError({ statusCode: 409, message: 'Slug already exists for this team' })
+      throw createError({ statusCode: 409, message: 'Link already exists for this team' })
     }
 
     if (error?.statusCode) {

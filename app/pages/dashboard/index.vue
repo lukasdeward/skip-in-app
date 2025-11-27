@@ -48,7 +48,7 @@ const extractDomainName = (input: string) => {
   return base ? `${base.charAt(0).toUpperCase()}${base.slice(1)}` : host
 }
 
-const createTeam = async (overrideName?: string) => {
+const createTeam = (overrideName?: string) => {
   const name = (overrideName ?? newTeamName.value).trim()
 
   if (!name) {
@@ -59,14 +59,14 @@ const createTeam = async (overrideName?: string) => {
   creatingTeam.value = true
 
   try {
-    await $fetch('/api/teams', {
+    $fetch('/api/teams', {
       method: 'POST',
       body: { name }
     })
 
     toast.add({ title: 'Team created', description: `${name} is ready.`, color: 'success' })
     newTeamName.value = ''
-    await loadTeams()
+    loadTeams()
   } catch (error: any) {
     const message = error?.data?.message || error?.message || 'Unable to create team'
     toast.add({ title: 'Creation failed', description: message, color: 'error' })
@@ -185,7 +185,7 @@ watch([teamsFetched, teams, () => user.value], () => {
                 color="neutral"
                 :loading="creatingTeam"
                 block
-                @click="createTeam"
+                @click="() => createTeam()"
               />
             </div>
           </UCard>

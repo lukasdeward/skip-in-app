@@ -58,7 +58,7 @@ const logout = async () => {
         <UButton
           label="Log out"
           color="neutral"
-          variant="solid"
+          variant="outline"
           :loading="loggingOut"
           @click="logout"
           class="hidden lg:inline-flex"

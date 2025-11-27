@@ -156,10 +156,7 @@ exports.Prisma.TeamMemberScalarFieldEnum = {
 exports.Prisma.LinkScalarFieldEnum = {
   id: 'id',
   teamId: 'teamId',
-  slug: 'slug',
   targetUrl: 'targetUrl',
-  title: 'title',
-  description: 'description',
   clickCount: 'clickCount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

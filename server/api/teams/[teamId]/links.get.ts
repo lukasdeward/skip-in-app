@@ -36,10 +36,7 @@ export default defineEventHandler(async (event) => {
 
     return links.map(link => ({
       id: link.id,
-      slug: link.slug,
       targetUrl: link.targetUrl,
-      title: link.title,
-      description: link.description,
       clickCount: link.clickCount,
       createdAt: link.createdAt
     }))

@@ -9,10 +9,7 @@ const props = defineProps<{
 
 type TeamLink = {
   id: string
-  slug: string
   targetUrl: string
-  title?: string | null
-  description?: string | null
   clickCount: number
   createdAt: string
 }
@@ -20,19 +17,13 @@ type TeamLink = {
 const toast = useToast()
 
 const linkSchema = z.object({
-  slug: z.string().trim().min(1, 'Slug is required').regex(/^[a-zA-Z0-9-]+$/, 'Use letters, numbers, and dashes'),
-  targetUrl: z.string().trim().url('Enter a valid URL'),
-  title: z.string().optional(),
-  description: z.string().optional()
+  targetUrl: z.string().trim().url('Enter a valid URL')
 })
 
 type LinkForm = z.input<typeof linkSchema>
 
 const linkState = reactive<LinkForm>({
-  slug: '',
-  targetUrl: '',
-  title: '',
-  description: ''
+  targetUrl: ''
 })
 
 const links = ref<TeamLink[]>([])
@@ -44,10 +35,7 @@ const editingLinkId = ref<string | null>(null)
 const linkModalOpen = ref(false)
 
 const resetLinkForm = () => {
-  linkState.slug = ''
   linkState.targetUrl = ''
-  linkState.title = ''
-  linkState.description = ''
   editingLinkId.value = null
 }
 
@@ -80,10 +68,7 @@ const onSubmitLink = async (payload: FormSubmitEvent<LinkForm>) => {
 
   try {
     const body = {
-      slug: payload.data.slug.trim(),
-      targetUrl: payload.data.targetUrl.trim(),
-      title: payload.data.title?.trim() || undefined,
-      description: payload.data.description?.trim() || undefined
+      targetUrl: payload.data.targetUrl.trim()
     }
 
     if (editingLinkId.value) {
@@ -113,16 +98,13 @@ const onSubmitLink = async (payload: FormSubmitEvent<LinkForm>) => {
 
 const startEditLink = (link: TeamLink) => {
   editingLinkId.value = link.id
-  linkState.slug = link.slug
   linkState.targetUrl = link.targetUrl
-  linkState.title = link.title || ''
-  linkState.description = link.description || ''
   linkModalOpen.value = true
 }
 
 const deleteLink = async (link: TeamLink) => {
   if (!props.teamId || !process.client) return
-  const confirmed = window.confirm(`Delete link "${link.slug}"?`)
+  const confirmed = window.confirm(`Delete link "${link.targetUrl}"?`)
   if (!confirmed) return
 
   try {
@@ -149,6 +131,10 @@ watch(() => props.teamId, () => {
     fetchLinks()
   }
 }, { immediate: true })
+
+const skipDomain = 'skip.social/open'
+const formatSkipUrlText = (id: string) => `${skipDomain}/${id}`
+const formatSkipUrlHref = (id: string) => `https://${formatSkipUrlText(id)}`
 </script>
 
 <template>
@@ -198,13 +184,19 @@ watch(() => props.teamId, () => {
           class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 border border-dashed rounded-xl p-4"
         >
           <div class="space-y-1">
-            <div class="flex items-center gap-2">
-              <p class="font-semibold text-sm break-all">/{{ link.slug }}</p>
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="text-xs uppercase text-muted">Skip Url</p>
+              <a
+                :href="formatSkipUrlHref(link.id)"
+                target="_blank"
+                rel="noreferrer"
+                class="font-semibold text-sm break-all"
+              >
+                {{ formatSkipUrlText(link.id) }}
+              </a>
               <UBadge color="neutral" variant="subtle">{{ link.clickCount }} clicks</UBadge>
             </div>
-            <p class="text-sm break-all">{{ link.targetUrl }}</p>
-            <p v-if="link.title" class="text-sm text-muted">Title: {{ link.title }}</p>
-            <p v-if="link.description" class="text-sm text-muted">{{ link.description }}</p>
+            <p class="text-sm text-muted break-all">Destination: {{ link.targetUrl }}</p>
           </div>
 
           <div class="flex items-center gap-2 self-end">
@@ -243,17 +235,8 @@ watch(() => props.teamId, () => {
             :disabled="!canManage"
             @submit="onSubmitLink"
           >
-            <UFormGroup label="Slug" name="slug" description="Only letters, numbers, and dashes.">
-              <UInput v-model="linkState.slug" placeholder="promo" />
-            </UFormGroup>
             <UFormGroup label="Target URL" name="targetUrl">
               <UInput v-model="linkState.targetUrl" placeholder="https://example.com/landing" />
-            </UFormGroup>
-            <UFormGroup label="Title" name="title">
-              <UInput v-model="linkState.title" placeholder="Optional title" />
-            </UFormGroup>
-            <UFormGroup label="Description" name="description">
-              <UTextarea v-model="linkState.description" placeholder="Optional description" :rows="3" />
             </UFormGroup>
 
             <div class="flex justify-end gap-2">

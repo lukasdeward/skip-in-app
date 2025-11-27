@@ -112,6 +112,7 @@ watch(teamId, () => {
         <UButton
           label="Back to dashboard"
           icon="i-lucide-arrow-left"
+          variant="ghost"
           color="neutral"
           to="/dashboard"
         />

@@ -4634,10 +4634,7 @@ export namespace Prisma {
   export type LinkMinAggregateOutputType = {
     id: string | null
     teamId: string | null
-    slug: string | null
     targetUrl: string | null
-    title: string | null
-    description: string | null
     clickCount: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4646,10 +4643,7 @@ export namespace Prisma {
   export type LinkMaxAggregateOutputType = {
     id: string | null
     teamId: string | null
-    slug: string | null
     targetUrl: string | null
-    title: string | null
-    description: string | null
     clickCount: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4658,10 +4652,7 @@ export namespace Prisma {
   export type LinkCountAggregateOutputType = {
     id: number
     teamId: number
-    slug: number
     targetUrl: number
-    title: number
-    description: number
     clickCount: number
     createdAt: number
     updatedAt: number
@@ -4680,10 +4671,7 @@ export namespace Prisma {
   export type LinkMinAggregateInputType = {
     id?: true
     teamId?: true
-    slug?: true
     targetUrl?: true
-    title?: true
-    description?: true
     clickCount?: true
     createdAt?: true
     updatedAt?: true
@@ -4692,10 +4680,7 @@ export namespace Prisma {
   export type LinkMaxAggregateInputType = {
     id?: true
     teamId?: true
-    slug?: true
     targetUrl?: true
-    title?: true
-    description?: true
     clickCount?: true
     createdAt?: true
     updatedAt?: true
@@ -4704,10 +4689,7 @@ export namespace Prisma {
   export type LinkCountAggregateInputType = {
     id?: true
     teamId?: true
-    slug?: true
     targetUrl?: true
-    title?: true
-    description?: true
     clickCount?: true
     createdAt?: true
     updatedAt?: true
@@ -4803,10 +4785,7 @@ export namespace Prisma {
   export type LinkGroupByOutputType = {
     id: string
     teamId: string
-    slug: string
     targetUrl: string
-    title: string | null
-    description: string | null
     clickCount: number
     createdAt: Date
     updatedAt: Date
@@ -4834,10 +4813,7 @@ export namespace Prisma {
   export type LinkSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     teamId?: boolean
-    slug?: boolean
     targetUrl?: boolean
-    title?: boolean
-    description?: boolean
     clickCount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4847,10 +4823,7 @@ export namespace Prisma {
   export type LinkSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     teamId?: boolean
-    slug?: boolean
     targetUrl?: boolean
-    title?: boolean
-    description?: boolean
     clickCount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4860,10 +4833,7 @@ export namespace Prisma {
   export type LinkSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     teamId?: boolean
-    slug?: boolean
     targetUrl?: boolean
-    title?: boolean
-    description?: boolean
     clickCount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4873,16 +4843,13 @@ export namespace Prisma {
   export type LinkSelectScalar = {
     id?: boolean
     teamId?: boolean
-    slug?: boolean
     targetUrl?: boolean
-    title?: boolean
-    description?: boolean
     clickCount?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type LinkOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "slug" | "targetUrl" | "title" | "description" | "clickCount" | "createdAt" | "updatedAt", ExtArgs["result"]["link"]>
+  export type LinkOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "teamId" | "targetUrl" | "clickCount" | "createdAt" | "updatedAt", ExtArgs["result"]["link"]>
   export type LinkInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     team?: boolean | TeamDefaultArgs<ExtArgs>
   }
@@ -4901,10 +4868,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       teamId: string
-      slug: string
       targetUrl: string
-      title: string | null
-      description: string | null
       clickCount: number
       createdAt: Date
       updatedAt: Date
@@ -5334,10 +5298,7 @@ export namespace Prisma {
   interface LinkFieldRefs {
     readonly id: FieldRef<"Link", 'String'>
     readonly teamId: FieldRef<"Link", 'String'>
-    readonly slug: FieldRef<"Link", 'String'>
     readonly targetUrl: FieldRef<"Link", 'String'>
-    readonly title: FieldRef<"Link", 'String'>
-    readonly description: FieldRef<"Link", 'String'>
     readonly clickCount: FieldRef<"Link", 'Int'>
     readonly createdAt: FieldRef<"Link", 'DateTime'>
     readonly updatedAt: FieldRef<"Link", 'DateTime'>
@@ -5813,10 +5774,7 @@ export namespace Prisma {
   export const LinkScalarFieldEnum: {
     id: 'id',
     teamId: 'teamId',
-    slug: 'slug',
     targetUrl: 'targetUrl',
-    title: 'title',
-    description: 'description',
     clickCount: 'clickCount',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -6158,10 +6116,7 @@ export namespace Prisma {
     NOT?: LinkWhereInput | LinkWhereInput[]
     id?: StringFilter<"Link"> | string
     teamId?: StringFilter<"Link"> | string
-    slug?: StringFilter<"Link"> | string
     targetUrl?: StringFilter<"Link"> | string
-    title?: StringNullableFilter<"Link"> | string | null
-    description?: StringNullableFilter<"Link"> | string | null
     clickCount?: IntFilter<"Link"> | number
     createdAt?: DateTimeFilter<"Link"> | Date | string
     updatedAt?: DateTimeFilter<"Link"> | Date | string
@@ -6171,10 +6126,7 @@ export namespace Prisma {
   export type LinkOrderByWithRelationInput = {
     id?: SortOrder
     teamId?: SortOrder
-    slug?: SortOrder
     targetUrl?: SortOrder
-    title?: SortOrderInput | SortOrder
-    description?: SortOrderInput | SortOrder
     clickCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -6183,28 +6135,21 @@ export namespace Prisma {
 
   export type LinkWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    teamId_slug?: LinkTeamIdSlugCompoundUniqueInput
     AND?: LinkWhereInput | LinkWhereInput[]
     OR?: LinkWhereInput[]
     NOT?: LinkWhereInput | LinkWhereInput[]
     teamId?: StringFilter<"Link"> | string
-    slug?: StringFilter<"Link"> | string
     targetUrl?: StringFilter<"Link"> | string
-    title?: StringNullableFilter<"Link"> | string | null
-    description?: StringNullableFilter<"Link"> | string | null
     clickCount?: IntFilter<"Link"> | number
     createdAt?: DateTimeFilter<"Link"> | Date | string
     updatedAt?: DateTimeFilter<"Link"> | Date | string
     team?: XOR<TeamScalarRelationFilter, TeamWhereInput>
-  }, "id" | "teamId_slug">
+  }, "id">
 
   export type LinkOrderByWithAggregationInput = {
     id?: SortOrder
     teamId?: SortOrder
-    slug?: SortOrder
     targetUrl?: SortOrder
-    title?: SortOrderInput | SortOrder
-    description?: SortOrderInput | SortOrder
     clickCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -6221,10 +6166,7 @@ export namespace Prisma {
     NOT?: LinkScalarWhereWithAggregatesInput | LinkScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"Link"> | string
     teamId?: StringWithAggregatesFilter<"Link"> | string
-    slug?: StringWithAggregatesFilter<"Link"> | string
     targetUrl?: StringWithAggregatesFilter<"Link"> | string
-    title?: StringNullableWithAggregatesFilter<"Link"> | string | null
-    description?: StringNullableWithAggregatesFilter<"Link"> | string | null
     clickCount?: IntWithAggregatesFilter<"Link"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Link"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Link"> | Date | string
@@ -6469,10 +6411,7 @@ export namespace Prisma {
 
   export type LinkCreateInput = {
     id?: string
-    slug: string
     targetUrl: string
-    title?: string | null
-    description?: string | null
     clickCount?: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -6482,10 +6421,7 @@ export namespace Prisma {
   export type LinkUncheckedCreateInput = {
     id?: string
     teamId: string
-    slug: string
     targetUrl: string
-    title?: string | null
-    description?: string | null
     clickCount?: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -6493,10 +6429,7 @@ export namespace Prisma {
 
   export type LinkUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
-    slug?: StringFieldUpdateOperationsInput | string
     targetUrl?: StringFieldUpdateOperationsInput | string
-    title?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
     clickCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6506,10 +6439,7 @@ export namespace Prisma {
   export type LinkUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     teamId?: StringFieldUpdateOperationsInput | string
-    slug?: StringFieldUpdateOperationsInput | string
     targetUrl?: StringFieldUpdateOperationsInput | string
-    title?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
     clickCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6518,10 +6448,7 @@ export namespace Prisma {
   export type LinkCreateManyInput = {
     id?: string
     teamId: string
-    slug: string
     targetUrl: string
-    title?: string | null
-    description?: string | null
     clickCount?: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -6529,10 +6456,7 @@ export namespace Prisma {
 
   export type LinkUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
-    slug?: StringFieldUpdateOperationsInput | string
     targetUrl?: StringFieldUpdateOperationsInput | string
-    title?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
     clickCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6541,10 +6465,7 @@ export namespace Prisma {
   export type LinkUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     teamId?: StringFieldUpdateOperationsInput | string
-    slug?: StringFieldUpdateOperationsInput | string
     targetUrl?: StringFieldUpdateOperationsInput | string
-    title?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
     clickCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6853,18 +6774,10 @@ export namespace Prisma {
     not?: NestedIntFilter<$PrismaModel> | number
   }
 
-  export type LinkTeamIdSlugCompoundUniqueInput = {
-    teamId: string
-    slug: string
-  }
-
   export type LinkCountOrderByAggregateInput = {
     id?: SortOrder
     teamId?: SortOrder
-    slug?: SortOrder
     targetUrl?: SortOrder
-    title?: SortOrder
-    description?: SortOrder
     clickCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -6877,10 +6790,7 @@ export namespace Prisma {
   export type LinkMaxOrderByAggregateInput = {
     id?: SortOrder
     teamId?: SortOrder
-    slug?: SortOrder
     targetUrl?: SortOrder
-    title?: SortOrder
-    description?: SortOrder
     clickCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -6889,10 +6799,7 @@ export namespace Prisma {
   export type LinkMinOrderByAggregateInput = {
     id?: SortOrder
     teamId?: SortOrder
-    slug?: SortOrder
     targetUrl?: SortOrder
-    title?: SortOrder
-    description?: SortOrder
     clickCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7519,10 +7426,7 @@ export namespace Prisma {
 
   export type LinkCreateWithoutTeamInput = {
     id?: string
-    slug: string
     targetUrl: string
-    title?: string | null
-    description?: string | null
     clickCount?: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7530,10 +7434,7 @@ export namespace Prisma {
 
   export type LinkUncheckedCreateWithoutTeamInput = {
     id?: string
-    slug: string
     targetUrl: string
-    title?: string | null
-    description?: string | null
     clickCount?: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7626,10 +7527,7 @@ export namespace Prisma {
     NOT?: LinkScalarWhereInput | LinkScalarWhereInput[]
     id?: StringFilter<"Link"> | string
     teamId?: StringFilter<"Link"> | string
-    slug?: StringFilter<"Link"> | string
     targetUrl?: StringFilter<"Link"> | string
-    title?: StringNullableFilter<"Link"> | string | null
-    description?: StringNullableFilter<"Link"> | string | null
     clickCount?: IntFilter<"Link"> | number
     createdAt?: DateTimeFilter<"Link"> | Date | string
     updatedAt?: DateTimeFilter<"Link"> | Date | string
@@ -7957,10 +7855,7 @@ export namespace Prisma {
 
   export type LinkCreateManyTeamInput = {
     id?: string
-    slug: string
     targetUrl: string
-    title?: string | null
-    description?: string | null
     clickCount?: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -7975,10 +7870,7 @@ export namespace Prisma {
 
   export type LinkUpdateWithoutTeamInput = {
     id?: StringFieldUpdateOperationsInput | string
-    slug?: StringFieldUpdateOperationsInput | string
     targetUrl?: StringFieldUpdateOperationsInput | string
-    title?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
     clickCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7986,10 +7878,7 @@ export namespace Prisma {
 
   export type LinkUncheckedUpdateWithoutTeamInput = {
     id?: StringFieldUpdateOperationsInput | string
-    slug?: StringFieldUpdateOperationsInput | string
     targetUrl?: StringFieldUpdateOperationsInput | string
-    title?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
     clickCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -7997,10 +7886,7 @@ export namespace Prisma {
 
   export type LinkUncheckedUpdateManyWithoutTeamInput = {
     id?: StringFieldUpdateOperationsInput | string
-    slug?: StringFieldUpdateOperationsInput | string
     targetUrl?: StringFieldUpdateOperationsInput | string
-    title?: NullableStringFieldUpdateOperationsInput | string | null
-    description?: NullableStringFieldUpdateOperationsInput | string | null
     clickCount?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
