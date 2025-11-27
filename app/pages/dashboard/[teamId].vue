@@ -1,0 +1,164 @@
+<script setup lang="ts">
+const route = useRoute()
+const user = useSupabaseUser()
+const teamId = computed(() => route.params.teamId as string)
+
+type TeamRole = 'OWNER' | 'ADMIN' | 'MEMBER'
+type TeamDetails = {
+  id: string
+  name: string
+  logoUrl?: string | null
+  primaryColor?: string | null
+  font?: string | null
+  role: TeamRole
+}
+
+const tabs = [
+  { label: 'Links', value: 'links', icon: 'i-lucide-link' },
+  { label: 'Settings', value: 'settings', icon: 'i-lucide-settings' },
+  { label: 'Members', value: 'members', icon: 'i-lucide-users' },
+  { label: 'Billing', value: 'billing', icon: 'i-lucide-credit-card' }
+]
+
+const activeTab = ref('links')
+
+const team = ref<TeamDetails | null>(null)
+const teamPending = ref(false)
+const teamError = ref<any>(null)
+const isTeamNotFound = computed(() => {
+  const status = teamError.value?.statusCode || teamError.value?.data?.statusCode
+  return status === 404
+})
+
+const loadTeam = async () => {
+  if (!user.value || !teamId.value) return
+
+  teamPending.value = true
+  teamError.value = null
+
+  try {
+    team.value = await $fetch<TeamDetails>(`/api/teams/${teamId.value}`)
+  } catch (error: any) {
+    teamError.value = error
+    team.value = null
+  } finally {
+    teamPending.value = false
+  }
+}
+
+watch([() => user.value, teamId], ([currentUser]) => {
+  if (currentUser) {
+    loadTeam()
+  } else {
+    team.value = null
+    teamError.value = null
+  }
+}, { immediate: true })
+
+const canManageTeam = computed(() => team.value?.role !== 'MEMBER')
+const canManageMembers = computed(() => ['OWNER', 'ADMIN'].includes(team.value?.role || ''))
+
+const handleTeamUpdated = async () => {
+  await loadTeam()
+}
+
+watch(teamId, () => {
+  activeTab.value = 'links'
+})
+</script>
+
+<template>
+  <div class="space-y-10 max-w-7xl mx-auto">
+    <UCard v-if="teamPending" class="flex justify-center gap-3 text-muted">
+      <UIcon name="i-lucide-loader-2" class="animate-spin" />
+      Loading team...
+    </UCard>
+
+    <UAlert
+      v-else-if="isTeamNotFound"
+      color="warning"
+      variant="subtle"
+      title="Team not found"
+      :description="`We couldn't find team ${teamId}.`"
+    />
+
+    <UAlert
+      v-else-if="teamError"
+      color="error"
+      variant="subtle"
+      title="Could not load team"
+      :description="teamError?.data?.message || teamError?.message || 'Please try again.'"
+    />
+
+    <template v-else-if="team">
+      <UCard :ui="{ body: 'flex items-center gap-4' }">
+        <div
+          class="h-14 w-14 rounded-xl flex items-center justify-center text-white font-semibold text-lg"
+          :style="{ backgroundColor: team.primaryColor || '#020618' }"
+        >
+          <span v-if="team.logoUrl" class="sr-only">{{ team.name }}</span>
+          <NuxtImg
+            v-if="team.logoUrl"
+            :src="team.logoUrl"
+            alt=""
+            class="h-10 w-10 object-contain"
+          />
+          <span v-else>{{ team.name.slice(0, 2).toUpperCase() }}</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xl font-semibold truncate">{{ team.name }}</p>
+          <p class="text-muted text-sm">Role: {{ team.role.toLowerCase() }}</p>
+        </div>
+        <UButton
+          label="Back to dashboard"
+          icon="i-lucide-arrow-left"
+          color="neutral"
+          to="/dashboard"
+        />
+      </UCard>
+
+      <div class="px-4">
+        <div class="overflow-x-auto -mx-2 px-2 pb-2">
+          <UTabs
+            v-model="activeTab"
+            :items="tabs"
+            color="neutral"
+            :ui="{
+              list: 'flex-nowrap w-max gap-2 ml-18',
+              trigger: 'whitespace-nowrap flex-shrink-0'
+            }"
+          />
+        </div>
+
+        <div v-if="activeTab === 'links'" class="space-y-4">
+          <TeamLinksSection :team-id="team.id" :can-manage="canManageTeam" />
+        </div>
+
+        <div v-else-if="activeTab === 'settings'" class="space-y-6">
+          <TeamSettingsSection
+            :team-id="team.id"
+            :team="team"
+            :can-manage="canManageTeam"
+            @updated="handleTeamUpdated"
+          />
+        </div>
+
+        <div v-else-if="activeTab === 'members'" class="space-y-4">
+          <TeamMembersSection :team-id="team.id" :can-manage="canManageMembers" />
+        </div>
+
+        <div v-else-if="activeTab === 'billing'" class="text-muted">
+          Billing and subscription details. (Coming soon)
+        </div>
+      </div>
+    </template>
+
+    <UAlert
+      v-else
+      color="warning"
+      variant="subtle"
+      title="No team to show"
+      description="Select a team from the dashboard to manage it."
+    />
+  </div>
+</template>

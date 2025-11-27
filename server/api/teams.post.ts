@@ -9,19 +9,37 @@ export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
 
   if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+    throw createError({ statusCode: 401, message: 'Unauthorized' })
+  }
+
+  if (!process.env.DATABASE_URL) {
+    throw createError({ statusCode: 503, message: 'Database not configured' })
   }
 
   const body = await readBody<{ name?: string }>(event)
   const name = body?.name?.trim()
 
   if (!name) {
-    throw createError({ statusCode: 400, statusMessage: 'Team name is required' })
+    throw createError({ statusCode: 400, message: 'Team name is required' })
   }
 
   const prisma = new PrismaClient()
 
   try {
+    const email = user.email || (user.user_metadata as Record<string, any> | undefined)?.email || `${user.id}@example.com`
+
+    await prisma.customer.upsert({
+      where: { id: user.id },
+      update: {
+        email
+      },
+      create: {
+        id: user.id,
+        email,
+        stripeCustomerId: `temp_${randomUUID()}`
+      }
+    })
+
     const team = await prisma.team.create({
       data: {
         name,
@@ -53,7 +71,8 @@ export default defineEventHandler(async (event) => {
       primaryColor: team.primaryColor
     }
   } catch (error: any) {
-    throw createError({ statusCode: 500, statusMessage: error?.message || 'Failed to create team' })
+    console.error('[teams.post] Failed to create team', error)
+    throw createError({ statusCode: 500, message: error?.message || 'Failed to create team' })
   } finally {
     await prisma.$disconnect().catch(() => {})
   }

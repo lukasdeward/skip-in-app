@@ -27,7 +27,7 @@ const columns = [{
 
 <template>
   <USeparator
-    icon="i-simple-icons-nuxtdotjs"
+    icon="i-arrow-up-down"
     class="h-px"
   />
 

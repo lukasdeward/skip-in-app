@@ -36,7 +36,7 @@ watch(() => props.open, (open) => {
 
 <template>
   <UModal v-model:open="model">
-    <template #content>
+    <template #content="{ close }">
       <UCard>
         <SignupForm
           v-if="!linkSent"
@@ -61,7 +61,7 @@ watch(() => props.open, (open) => {
               label="Close"
               color="primary"
               block
-              @click="model = false"
+              @click="close"
             />
             <UButton
               label="Use a different email"

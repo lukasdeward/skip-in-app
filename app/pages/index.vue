@@ -19,6 +19,14 @@ function onSubmitLink() {
   const query = userUrl.value ? { url: userUrl.value } : {}
   router.replace({ query })
   showSignup.value = true
+
+  if (process.client && userUrl.value) {
+    try {
+      localStorage.setItem('landing:last-url', userUrl.value.trim())
+    } catch (error) {
+      console.error('[landing] Failed to persist url', error)
+    }
+  }
 }
 </script>
 
