@@ -1,6 +1,6 @@
 import { createError, defineEventHandler, readBody } from 'h3'
 import { randomUUID } from 'crypto'
-import { TeamRole } from '~~/prisma/client'
+import { TeamRole } from '@prisma/client'
 import { serverSupabaseUser } from '#supabase/server'
 import prisma from '~~/server/utils/prisma'
 
@@ -59,8 +59,6 @@ export default defineEventHandler(async (event) => {
         role: TeamRole.OWNER
       }
     })
-
-    await prisma.$disconnect()
 
     return {
       id: team.id,
