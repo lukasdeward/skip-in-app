@@ -16,8 +16,9 @@ const allowedLogoTypes = new Set([
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event).catch(() => null)
   const teamId = getRouterParam(event, 'teamId')
+  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
 
-  if (!user) {
+  if (!user || !customerId) {
     throw createError({ statusCode: 401, message: 'Unauthorized' })
   }
 
@@ -46,7 +47,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     const membership = await prisma.teamMember.findUnique({
-      where: { teamId_customerId: { teamId, customerId: user.id } }
+      where: { teamId_customerId: { teamId, customerId } }
     })
 
     if (!membership) {

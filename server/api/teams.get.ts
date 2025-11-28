@@ -4,8 +4,9 @@ import prisma from '~~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event).catch(() => null)
+  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
 
-  if (!user) {
+  if (!user || !customerId) {
     throw createError({ statusCode: 401, message: 'Unauthorized' })
   }
 
@@ -19,7 +20,7 @@ export default defineEventHandler(async (event) => {
       where: {
         members: {
           some: {
-            customerId: user.id
+            customerId
           }
         }
       },

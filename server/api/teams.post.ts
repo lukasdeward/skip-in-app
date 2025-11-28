@@ -6,8 +6,9 @@ import prisma from '~~/server/utils/prisma'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
+  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
 
-  if (!user) {
+  if (!user || !customerId) {
     throw createError({ statusCode: 401, message: 'Unauthorized' })
   }
 
@@ -26,12 +27,12 @@ export default defineEventHandler(async (event) => {
     const email = user.email || (user.user_metadata as Record<string, any> | undefined)?.email || `${user.id}@example.com`
 
     await prisma.customer.upsert({
-      where: { id: user.id },
+      where: { id: customerId },
       update: {
         email
       },
       create: {
-        id: user.id,
+        id: customerId,
         email,
         stripeCustomerId: `temp_${randomUUID()}`
       }
@@ -40,7 +41,7 @@ export default defineEventHandler(async (event) => {
     const team = await prisma.team.create({
       data: {
         name,
-        customerId: user.id,
+        customerId,
         stripeSubscriptionId: `temp_${randomUUID()}`
       },
       select: {
@@ -56,7 +57,7 @@ export default defineEventHandler(async (event) => {
     await prisma.teamMember.create({
       data: {
         teamId: team.id,
-        customerId: user.id,
+        customerId,
         role: TeamRole.OWNER
       }
     })
