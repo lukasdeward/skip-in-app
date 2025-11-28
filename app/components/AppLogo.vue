@@ -38,6 +38,10 @@ const refreshLogo = () => {
   logoSrc.value = colorMode.value === 'dark' ? '/skip-in-app-white.png' : '/skip-in-app.png'
 }
 
+onMounted(() => {
+  refreshLogo()
+})
+
 watch(() => colorMode.value, refreshLogo)
 watch(isDarkBackground, refreshLogo, { immediate: true })
 

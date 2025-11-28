@@ -38,7 +38,7 @@ export default defineNuxtConfig({
     },
     externals: {
       trace: false,
-      inline: [],
+      inline: ['unstorage', 'lru-cache'],
       external: [
         '@prisma/client',
         '.prisma/client',
