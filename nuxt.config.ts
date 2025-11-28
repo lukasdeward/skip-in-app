@@ -49,7 +49,8 @@ export default defineNuxtConfig({
         '@unocss/preset-wind',
         '@unocss/preset-icons',
         '@unocss/preset-attributify',
-        '@unocss/transformer-directives'
+        '@unocss/transformer-directives',
+        '@unocss/extractor-arbitrary-variants'
       ],
       external: [
         '@prisma/client',

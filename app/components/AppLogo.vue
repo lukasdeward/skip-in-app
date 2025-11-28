@@ -29,21 +29,14 @@ const isDarkBackground = computed(() => {
 })
 
 const logoSrc = ref('/skip-in-app.png')
-
-const refreshLogo = () => {
-  if (isDarkBackground.value !== null) {
-    logoSrc.value = isDarkBackground.value ? '/skip-in-app-white.png' : '/skip-in-app.png'
-    return
-  }
-  logoSrc.value = colorMode.value === 'dark' ? '/skip-in-app-white.png' : '/skip-in-app.png'
-}
-
-onMounted(() => {
-  refreshLogo()
+const shouldUseLightLogo = computed(() => {
+  if (isDarkBackground.value !== null) return isDarkBackground.value
+  return colorMode.value === 'dark'
 })
 
-watch(() => colorMode.value, refreshLogo)
-watch(isDarkBackground, refreshLogo, { immediate: true })
+watchEffect(() => {
+  logoSrc.value = shouldUseLightLogo.value ? '/skip-in-app-white.png' : '/skip-in-app.png'
+})
 
 const height = computed(() => props.height ?? 'h-18')
 </script>
