@@ -5,6 +5,7 @@ defineProps<{
   teamName?: string | null
   textColor?: string | null
   backgroundColor?: string | null
+  highlightColor?: string | null
 }>()
 
 </script>
@@ -13,7 +14,8 @@ defineProps<{
   <div :style="{ color: textColor || undefined }">
     <UIcon
       name="i-typcn-arrow-back"
-      class="absolute -top-2 right-2 h-20 w-20 text-orange-500 -rotate-270"
+      class="absolute -top-2 right-2 h-20 w-20 -rotate-270"
+      :style="{ color: highlightColor || '#f97316' }"
       aria-hidden="true"
     />
     <div class="flex flex-col gap-4">

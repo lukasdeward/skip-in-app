@@ -10,6 +10,7 @@ const props = defineProps<{
     logoUrl?: string | null
     backgroundColor?: string | null
     textColor?: string | null
+    highlightColor?: string | null
   }
   canManage: boolean
 }>()
@@ -21,11 +22,13 @@ const emit = defineEmits<{
 const toast = useToast()
 const fallbackBackgroundColor = '#020618'
 const fallbackTextColor = '#ffffff'
+const fallbackHighlightColor = '#f97316'
 
 const settingsSchema = z.object({
   name: z.string().trim().min(1, 'Team name is required'),
   backgroundColor: z.string().optional(),
-  textColor: z.string().optional()
+  textColor: z.string().optional(),
+  highlightColor: z.string().optional()
 })
 
 type SettingsForm = z.input<typeof settingsSchema>
@@ -33,7 +36,8 @@ type SettingsForm = z.input<typeof settingsSchema>
 const settingsState = reactive<SettingsForm>({
   name: '',
   backgroundColor: '',
-  textColor: ''
+  textColor: '',
+  highlightColor: ''
 })
 
 const savingSettings = ref(false)
@@ -43,6 +47,7 @@ watch(() => props.team, (value) => {
   settingsState.name = value?.name || ''
   settingsState.backgroundColor = value?.backgroundColor || ''
   settingsState.textColor = value?.textColor || ''
+  settingsState.highlightColor = value?.highlightColor || ''
 }, { immediate: true, deep: true })
 
 const onSubmitSettings = async (payload: FormSubmitEvent<SettingsForm>) => {
@@ -55,7 +60,8 @@ const onSubmitSettings = async (payload: FormSubmitEvent<SettingsForm>) => {
       body: {
         name: payload.data.name.trim(),
         backgroundColor: payload.data.backgroundColor?.trim() || null,
-        textColor: payload.data.textColor?.trim() || null
+        textColor: payload.data.textColor?.trim() || null,
+        highlightColor: payload.data.highlightColor?.trim() || null
       }
     })
 
@@ -167,7 +173,7 @@ watch(() => props.teamId, () => {
               <p class="font-semibold">{{ team.name }}</p>
             </div>
           </div>
-          <div class="grid gap-3 sm:grid-cols-2">
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div class="flex items-center gap-3">
               <div class="flex-1">
                 <p class="text-sm text-muted">Background color</p>
@@ -194,6 +200,17 @@ watch(() => props.teamId, () => {
               >
                 Aa
               </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="flex-1">
+                <p class="text-sm text-muted">Highlight color</p>
+                <p class="font-semibold">{{ team.highlightColor || 'Default' }}</p>
+              </div>
+              <div
+                class="h-10 w-10 rounded-lg border"
+                :style="{ backgroundColor: team.highlightColor || fallbackHighlightColor }"
+                title="Highlight preview"
+              />
             </div>
           </div>
         </div>
@@ -299,6 +316,16 @@ watch(() => props.teamId, () => {
                   >
                     Aa
                   </div>
+                </div>
+              </UFormGroup>
+              <UFormGroup label="Highlight color" name="highlightColor">
+                <div class="flex items-center gap-2">
+                  <UInput v-model="settingsState.highlightColor" placeholder="#f97316" />
+                  <div
+                    class="h-10 w-10 rounded-lg border"
+                    :style="{ backgroundColor: settingsState.highlightColor || team.highlightColor || fallbackHighlightColor }"
+                    title="Highlight preview"
+                  />
                 </div>
               </UFormGroup>
             </div>

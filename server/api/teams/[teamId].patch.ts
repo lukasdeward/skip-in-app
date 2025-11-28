@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
     name?: string
     backgroundColor?: string | null
     textColor?: string | null
+    highlightColor?: string | null
     // TODO: remove primaryColor once all clients use backgroundColor
     primaryColor?: string | null
     logoUrl?: string | null
@@ -63,6 +64,11 @@ export default defineEventHandler(async (event) => {
       updates.textColor = color || null
     }
 
+    if (body.highlightColor !== undefined) {
+      const color = body.highlightColor?.toString().trim()
+      updates.highlightColor = color || null
+    }
+
     if (body.logoUrl !== undefined) {
       const url = body.logoUrl?.toString().trim()
       updates.logoUrl = url || null
@@ -88,6 +94,7 @@ export default defineEventHandler(async (event) => {
       logoUrl: team.logoUrl,
       backgroundColor: team.backgroundColor,
       textColor: team.textColor,
+      highlightColor: team.highlightColor,
       font: team.font,
       role: membership.role
     }

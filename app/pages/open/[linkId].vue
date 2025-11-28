@@ -10,6 +10,7 @@ const showDiagnostics = useState('open-show-diagnostics', () => false)
 const linkId = computed(() => route.params.linkId as string)
 const defaultBackgroundColor = '#020618'
 const defaultTextColor = '#ffffff'
+const defaultHighlightColor = '#f97316'
 const openTheme = useState('open-theme', () => ({
   backgroundColor: defaultBackgroundColor,
   textColor: defaultTextColor
@@ -111,7 +112,8 @@ const {
   logoUrl?: string | null,
   teamName?: string | null,
   backgroundColor?: string | null,
-  textColor?: string | null
+  textColor?: string | null,
+  highlightColor?: string | null
 }>(() => `/api/open/${linkId.value}`, {
   server: true,
   immediate: true,
@@ -183,6 +185,7 @@ const message = computed(() => {
 const targetUrl = computed(() => data.value?.targetUrl ?? null)
 const backgroundColor = computed(() => data.value?.backgroundColor?.trim() || defaultBackgroundColor)
 const textColor = computed(() => data.value?.textColor?.trim() || defaultTextColor)
+const highlightColor = computed(() => data.value?.highlightColor?.trim() || defaultHighlightColor)
 
 watchEffect(() => {
   openTheme.value.backgroundColor = backgroundColor.value
@@ -268,6 +271,7 @@ useSeoMeta({
       :team-name="teamName || undefined"
       :text-color="textColor"
       :background-color="backgroundColor"
+      :highlight-color="highlightColor"
     />
 
     <div class="max-w-3xl py-10">

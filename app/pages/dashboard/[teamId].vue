@@ -10,6 +10,7 @@ type TeamDetails = {
   logoUrl?: string | null
   backgroundColor?: string | null
   textColor?: string | null
+  highlightColor?: string | null
   font?: string | null
   role: TeamRole
 }

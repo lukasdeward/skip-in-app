@@ -6,8 +6,8 @@ const openTheme = useState('open-theme', () => ({
 }))
 
 const themeStyles = computed(() => ({
-  backgroundColor: openTheme.value.backgroundColor || '#020618',
-  color: openTheme.value.textColor || '#ffffff'
+  backgroundColor: openTheme.value?.backgroundColor || '#020618',
+  color: openTheme.value?.textColor || '#ffffff'
 }))
 
 const toggleDiagnostics = () => {
@@ -31,7 +31,11 @@ const toggleDiagnostics = () => {
         aria-label="Toggle diagnostics"
         @click="toggleDiagnostics"
       >
-        <AppLogo height="h-8" class="w-auto transition group-hover:opacity-80" />
+        <AppLogo
+          height="h-8"
+          class="w-auto transition group-hover:opacity-80"
+          :background-color="openTheme.value?.backgroundColor || '#020618'"
+        />
       </button>
     </div>
   </div>

@@ -25,6 +25,7 @@ model Team {
   name                   String
   backgroundColor        String?      @map("primary_color")
   textColor              String?      @map("text_color")
+  highlightColor         String?      @map("highlight_color")
   logoUrl                String?      @map("logo_url")
   font                   String?
   stripeSubscriptionId   String       @unique @map("stripe_subscription_id")

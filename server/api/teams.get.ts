@@ -28,7 +28,8 @@ export default defineEventHandler(async (event) => {
         name: true,
         logoUrl: true,
         backgroundColor: true,
-        textColor: true
+        textColor: true,
+        highlightColor: true
       }
     })
   } catch (error: any) {

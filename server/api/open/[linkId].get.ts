@@ -23,7 +23,8 @@ export default defineEventHandler(async (event) => {
             logoUrl: true,
             name: true,
             backgroundColor: true,
-            textColor: true
+            textColor: true,
+            highlightColor: true
           }
         }
       }
@@ -34,7 +35,8 @@ export default defineEventHandler(async (event) => {
       logoUrl: link.team?.logoUrl ?? null,
       teamName: link.team?.name ?? null,
       backgroundColor: link.team?.backgroundColor ?? null,
-      textColor: link.team?.textColor ?? null
+      textColor: link.team?.textColor ?? null,
+      highlightColor: link.team?.highlightColor ?? null
     }
   } catch (error: any) {
     if (error?.code === 'P2025') {

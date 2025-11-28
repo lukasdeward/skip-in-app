@@ -13,6 +13,7 @@ type TeamSummary = {
   logoUrl?: string | null
   backgroundColor?: string | null
   textColor?: string | null
+  highlightColor?: string | null
 }
 
 const fallbackBackgroundColor = '#020618'
