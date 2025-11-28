@@ -37,7 +37,7 @@ export default defineNuxtConfig({
       ]
     },
     externals: {
-      trace: false,
+      trace: true,
       inline: [
         'unstorage',
         'lru-cache',
@@ -50,7 +50,8 @@ export default defineNuxtConfig({
         '@unocss/preset-icons',
         '@unocss/preset-attributify',
         '@unocss/transformer-directives',
-        '@unocss/extractor-arbitrary-variants'
+        '@unocss/extractor-arbitrary-variants',
+        '@unocss/rule-utils'
       ],
       external: [
         '@prisma/client',
