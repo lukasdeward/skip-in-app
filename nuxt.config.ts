@@ -38,7 +38,19 @@ export default defineNuxtConfig({
     },
     externals: {
       trace: false,
-      inline: ['unstorage', 'lru-cache'],
+      inline: [
+        'unstorage',
+        'lru-cache',
+        '@unocss/core',
+        '@unocss/reset',
+        '@unocss/nuxt',
+        '@unocss/preset-mini',
+        '@unocss/preset-uno',
+        '@unocss/preset-wind',
+        '@unocss/preset-icons',
+        '@unocss/preset-attributify',
+        '@unocss/transformer-directives'
+      ],
       external: [
         '@prisma/client',
         '.prisma/client',
