@@ -31,6 +31,9 @@ const isDarkBackground = computed(() => {
 const logoSrc = ref('/skip-in-app.png')
 const shouldUseLightLogo = computed(() => {
   if (isDarkBackground.value !== null) return isDarkBackground.value
+  if (colorMode.preference === 'system' && import.meta.client) {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches
+  }
   return colorMode.value === 'dark'
 })
 
