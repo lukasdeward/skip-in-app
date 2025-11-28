@@ -19,62 +19,8 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-07-11',
 
   nitro: {
-    prerender: {
-      routes: [
-        '/'
-      ],
-      crawlLinks: true
-    },
-    rollupConfig: {
-      external: [
-        '@supabase/supabase-js',
-        '@supabase/ssr',
-        '@supabase/auth-js',
-        '@supabase/functions-js',
-        '@supabase/postgrest-js',
-        '@supabase/realtime-js',
-        '@supabase/storage-js'
-      ]
-    },
     externals: {
-      trace: true,
-      inline: [
-        'unstorage',
-        'lru-cache',
-        '@unocss/core',
-        '@unocss/reset',
-        '@unocss/nuxt',
-        '@unocss/preset-mini',
-        '@unocss/preset-uno',
-        '@unocss/preset-wind',
-        '@unocss/preset-icons',
-        '@unocss/preset-attributify',
-        '@unocss/transformer-directives',
-        '@unocss/extractor-arbitrary-variants',
-        '@unocss/rule-utils'
-      ],
-      external: [
-        '@prisma/client',
-        '.prisma/client',
-        'prisma',
-        '@supabase/supabase-js',
-        '@supabase/ssr',
-        '@supabase/auth-js',
-        '@supabase/functions-js',
-        '@supabase/postgrest-js',
-        '@supabase/realtime-js',
-        '@supabase/storage-js'
-      ]
-    },
-    moduleSideEffects: ['@prisma/client', 'prisma']
-  },
-
-  eslint: {
-    config: {
-      stylistic: {
-        commaDangle: 'never',
-        braceStyle: '1tbs'
-      }
+      inline: ['@supabase/supabase-js']
     }
   },
 

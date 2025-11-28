@@ -28,7 +28,6 @@ const isDarkBackground = computed(() => {
   return luminance < 0.5
 })
 
-const logoSrc = ref('/skip-in-app.png')
 const shouldUseLightLogo = computed(() => {
   if (isDarkBackground.value !== null) return isDarkBackground.value
   if (colorMode.preference === 'system' && import.meta.client) {
@@ -37,19 +36,27 @@ const shouldUseLightLogo = computed(() => {
   return colorMode.value === 'dark'
 })
 
-watchEffect(() => {
-  logoSrc.value = shouldUseLightLogo.value ? '/skip-in-app-white.png' : '/skip-in-app.png'
-})
 
 const height = computed(() => props.height ?? 'h-18')
+
+const whiteLogo = computed(() => shouldUseLightLogo.value)
 </script>
 
 <template>
   <NuxtImg
-    :src="logoSrc"
+    v-if="!whiteLogo"
     alt="Skip In-App logo"
     :class="`${height} w-auto`"
     format="png"
+    src="/skip-in-app.png"
+    draggable="false"
+  />
+  <NuxtImg
+    v-else
+    alt="Skip In-App logo"
+    :class="`${height} w-auto`"
+    format="png"
+    src="/skip-in-app-white.png"
     draggable="false"
   />
 </template>
