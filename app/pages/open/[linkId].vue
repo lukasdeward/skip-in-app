@@ -6,6 +6,7 @@ definePageMeta({
 const route = useRoute()
 const toast = useToast()
 const { copy } = useClipboard()
+const showDiagnostics = useState('open-show-diagnostics', () => false)
 const linkId = computed(() => route.params.linkId as string)
 
 const shouldShowWebViewWarning = ref(false)
@@ -104,7 +105,15 @@ const {
   key: () => `open-link-${linkId.value}`
 })
 
+const isLocalhost = computed(() => {
+  if (!import.meta.client) return false
+  const host = window.location.hostname
+  return host === 'localhost' || host === '127.0.0.1' || host === '[::1]'
+})
+
 const attemptRedirect = async (force = false) => {
+  // Never auto-redirect when debugging locally to keep the interstitial visible.
+  if (!force && isLocalhost.value) return
   if (!force && shouldShowWebViewWarning.value) return
   if (data.value?.targetUrl) {
     await navigateTo(data.value.targetUrl, { external: true, replace: true })
@@ -114,6 +123,7 @@ const attemptRedirect = async (force = false) => {
 onMounted(() => {
   const info = detectWebView()
   detected.value = info
+  showDiagnostics.value = false
 
   if (info.isWebView) {
     browserName.value = info.isIOS ? 'Safari' : 'Chrome'
@@ -225,100 +235,15 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto py-16 px-4">
-    <UCard class="border border-dashed">
-      <div class="flex items-center gap-3">
-        <UIcon
-          v-if="status === 'loading'"
-          name="i-lucide-loader-2"
-          class="animate-spin h-6 w-6 text-muted"
-        />
-        <UIcon
-          v-else-if="status === 'redirecting'"
-          name="i-lucide-arrow-up-right"
-          class="h-6 w-6 text-muted"
-        />
-        <UIcon
-          v-else-if="status === 'warning'"
-          name="i-lucide-alert-triangle"
-          class="h-6 w-6 text-amber-500"
-        />
-        <UIcon
-          v-else
-          name="i-lucide-alert-circle"
-          class="h-6 w-6 text-error"
-        />
-        <div>
-          <p class="font-semibold">
-            Skip link
-          </p>
-          <p class="text-muted text-sm">
-            {{ message }}
-          </p>
-        </div>
-      </div>
-
-      <p
-        v-if="status === 'warning'"
-        class="mt-3 text-sm text-muted"
-      >
-        In-app browsers sometimes block redirects. Copy the link or open it in {{ browserName }} to continue.
-      </p>
-
-      <InAppBrowserInstructions
-        v-if="status === 'warning'"
+  <InAppBrowserInstructions
         class="mt-4"
         :browser-name="browserName"
       />
-
-      <div class="mt-6 flex flex-wrap gap-2 items-center">
-        <UButton
-          v-if="status === 'warning' && targetUrl"
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-copy"
-          :label="copyButtonLabel"
-          :loading="copying"
-          @click="copyLink"
-        />
-        <UButton
-          v-if="targetUrl"
-          :to="targetUrl"
-          target="_blank"
-          rel="noreferrer"
-          color="neutral"
-          icon="i-lucide-external-link"
-          label="Open manually"
-        />
-        <template v-if="status === 'warning'">
-          <UButton
-            color="warning"
-            variant="subtle"
-            icon="i-lucide-info"
-            :label="`Open in ${browserName}`"
-            :to="targetUrl || undefined"
-            target="_blank"
-            rel="noreferrer"
-          />
-        </template>
-        <UButton
-          v-if="status === 'error'"
-          color="neutral"
-          variant="outline"
-          icon="i-lucide-rotate-ccw"
-          label="Try again"
-          @click="retry"
-        />
-        <UButton
-          color="neutral"
-          variant="ghost"
-          to="/"
-          label="Back home"
-        />
-      </div>
+  
+  <div class="max-w-3xl mx-auto py-16 px-4">
 
       <div
-        v-if="detectedLabels.length > 0"
+        v-if="showDiagnostics && detectedLabels.length > 0"
         class="mt-6 space-y-2 text-sm"
       >
         <p class="font-semibold">
@@ -335,6 +260,6 @@ useSeoMeta({
           </div>
         </div>
       </div>
-    </UCard>
-  </div>
+
+    </div>
 </template>

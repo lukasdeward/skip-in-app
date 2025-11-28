@@ -14,7 +14,7 @@ const steps = computed(() => [
   <div class="relative rounded-lg border border-dashed bg-gray-50 p-4 dark:bg-gray-900/40">
     <UIcon
       name="i-typcn-arrow-back"
-      class="absolute -top-6 right-2 h-10 w-10 text-orange-500 -rotate-[135deg]"
+      class="absolute -top-6 right-2 h-20 w-20 text-orange-500 -rotate-270"
       aria-hidden="true"
     />
     <div class="flex items-start gap-3">
@@ -26,8 +26,8 @@ const steps = computed(() => [
       </div>
       <div class="flex-1 space-y-3">
         <div>
-          <p class="font-semibold">
-            Open in your browser
+          <p class="font-semibold text-2xl">
+            Open in {{ browserName }}
           </p>
           <p class="text-muted text-sm">
             Move out of the in-app browser so the link can complete.
