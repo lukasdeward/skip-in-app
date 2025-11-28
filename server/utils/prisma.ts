@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 
 declare global {
-  // eslint-disable-next-line no-var
+
   var __prisma: PrismaClient | undefined
 }
 
@@ -13,13 +13,13 @@ if (!databaseUrl) {
 
 const globalForPrisma = globalThis as unknown as { __prisma?: PrismaClient }
 
-const prisma =
-  globalForPrisma.__prisma ??
-  new PrismaClient({
-    datasources: {
-      db: { url: databaseUrl }
-    }
-  })
+const prisma
+  = globalForPrisma.__prisma
+    ?? new PrismaClient({
+      datasources: {
+        db: { url: databaseUrl }
+      }
+    })
 
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.__prisma = prisma

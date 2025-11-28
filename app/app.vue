@@ -18,7 +18,7 @@ useHead({
 })
 
 useSeoMeta({
-  titleTemplate: '%s - Skip.Social',
+  titleTemplate: '%s - Skip.Social'
 })
 
 const navigation = ref([])

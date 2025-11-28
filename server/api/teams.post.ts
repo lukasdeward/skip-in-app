@@ -4,7 +4,6 @@ import { TeamRole } from '@prisma/client'
 import { serverSupabaseUser } from '#supabase/server'
 import prisma from '~~/server/utils/prisma'
 
-
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
 

@@ -35,19 +35,30 @@ type SettingsForm = z.input<typeof settingsSchema>
 
 const settingsState = reactive<SettingsForm>({
   name: '',
-  backgroundColor: '',
-  textColor: '',
-  highlightColor: ''
+  backgroundColor: fallbackBackgroundColor,
+  textColor: fallbackTextColor,
+  highlightColor: fallbackHighlightColor
 })
 
 const savingSettings = ref(false)
-const settingsModalOpen = ref(false)
+
+const previewBackgroundColor = computed(() => settingsState.backgroundColor?.trim()
+  || props.team.backgroundColor?.trim()
+  || fallbackBackgroundColor)
+
+const previewTextColor = computed(() => settingsState.textColor?.trim()
+  || props.team.textColor?.trim()
+  || fallbackTextColor)
+
+const previewHighlightColor = computed(() => settingsState.highlightColor?.trim()
+  || props.team.highlightColor?.trim()
+  || fallbackHighlightColor)
 
 watch(() => props.team, (value) => {
   settingsState.name = value?.name || ''
-  settingsState.backgroundColor = value?.backgroundColor || ''
-  settingsState.textColor = value?.textColor || ''
-  settingsState.highlightColor = value?.highlightColor || ''
+  settingsState.backgroundColor = value?.backgroundColor || fallbackBackgroundColor
+  settingsState.textColor = value?.textColor || fallbackTextColor
+  settingsState.highlightColor = value?.highlightColor || fallbackHighlightColor
 }, { immediate: true, deep: true })
 
 const onSubmitSettings = async (payload: FormSubmitEvent<SettingsForm>) => {
@@ -67,7 +78,6 @@ const onSubmitSettings = async (payload: FormSubmitEvent<SettingsForm>) => {
 
     toast.add({ title: 'Settings saved', color: 'success' })
     emit('updated')
-    settingsModalOpen.value = false
   } catch (error: any) {
     const message = error?.data?.message || error?.message || 'Unable to save settings'
     toast.add({ title: 'Save failed', description: message, color: 'error' })
@@ -139,7 +149,6 @@ const removeLogo = async () => {
 }
 
 watch(() => props.teamId, () => {
-  settingsModalOpen.value = false
   if (logoInput.value) {
     logoInput.value.value = ''
   }
@@ -147,200 +156,205 @@ watch(() => props.teamId, () => {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <div class="grid gap-6 lg:grid-cols-3">
-      <UCard class="lg:col-span-2">
+  <div class="grid gap-6 lg:grid-cols-3">
+    <div class="space-y-6 lg:col-span-2">
+      <UCard>
         <template #header>
           <div class="flex items-center justify-between">
-            <p class="font-semibold">Team details</p>
             <div class="flex items-center gap-2">
-              <UBadge v-if="!canManage" color="neutral" variant="subtle">View only</UBadge>
-              <UButton
-                label="Edit settings"
+              <p class="font-semibold">
+                Team settings
+              </p>
+              <UBadge
+                v-if="!canManage"
                 color="neutral"
-                size="sm"
-                :disabled="!canManage"
-                @click="settingsModalOpen = true"
-              />
+                variant="subtle"
+              >
+                View only
+              </UBadge>
             </div>
+          </div>
+        </template>
+
+        <UForm
+          id="team-settings-form"
+          :schema="settingsSchema"
+          :state="settingsState"
+          :disabled="!canManage"
+          class="space-y-8"
+          @submit="onSubmitSettings"
+        >
+          <div class="flex flex-wrap items-center gap-4">
+            <div
+              class="h-16 w-16 rounded-xl flex items-center justify-center text-white font-semibold text-lg border border-dashed"
+              :style="{
+                backgroundColor: previewBackgroundColor,
+                color: previewTextColor
+              }"
+            >
+              <span
+                v-if="team.logoUrl"
+                class="sr-only"
+              >{{ team.name }}</span>
+              <NuxtImg
+                v-if="team.logoUrl"
+                :src="team.logoUrl"
+                alt=""
+                class="h-10 w-10 object-contain"
+              />
+              <span v-else>{{ team.name.slice(0, 2).toUpperCase() }}</span>
+            </div>
+            <div class="flex-1 min-w-[240px] space-y-1">
+              <p class="text-sm font-semibold">
+                Logo
+              </p>
+              <div class="flex flex-wrap items-center gap-2">
+                <UButton
+                  icon="i-lucide-upload"
+                  color="neutral"
+                  size="sm"
+                  :loading="logoUploading"
+                  :disabled="!canManage"
+                  @click="triggerLogoPicker"
+                >
+                  Upload logo
+                </UButton>
+                <UButton
+                  v-if="team.logoUrl"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  :disabled="!canManage"
+                  @click="removeLogo"
+                >
+                  Remove
+                </UButton>
+                <p class="text-xs text-muted">
+                  PNG, JPG, SVG, GIF, WebP
+                </p>
+              </div>
+              <input
+                ref="logoInput"
+                type="file"
+                accept="image/jpeg,image/png,image/svg+xml,image/jpg,image/gif,image/webp"
+                class="hidden"
+                @change="uploadLogo"
+              >
+            </div>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-1">
+            <UFormGroup
+              label="Team name"
+              name="name"
+            >
+              <UInput
+                v-model="settingsState.name"
+                placeholder="Team name"
+              />
+            </UFormGroup>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <p class="text-sm font-semibold">
+                Theme colors
+              </p>
+              <p class="text-xs text-muted">
+                Set background, text, and accent colors for your experience.
+              </p>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-3">
+              <UFormGroup
+                label="Background color"
+                name="backgroundColor"
+              >
+                <div class="flex items-center gap-3">
+                  <UInput
+                    v-model="settingsState.backgroundColor"
+                    type="color"
+                    class="h-10 w-14 rounded-lg border bg-white"
+                  />
+                  <UInput
+                    v-model="settingsState.backgroundColor"
+                    placeholder="#020618"
+                  />
+                </div>
+              </UFormGroup>
+                <UFormGroup
+                label="Text color"
+                name="textColor"
+              >
+                <div class="flex items-center gap-3">
+                  <UInput
+                    v-model="settingsState.textColor"
+                    type="color"
+                    class="h-10 w-14 rounded-lg border bg-white"
+                  />
+                  <UInput
+                    v-model="settingsState.textColor"
+                    placeholder="#ffffff"
+                  />
+                  {{ settingsState.backgroundColor ?? '#ffffff' }}
+                </div>
+              </UFormGroup>
+              <UFormGroup
+                label="Accent color"
+                name="highlightColor"
+              >
+                <div class="flex items-center gap-3">
+                  <UInput
+                    v-model="settingsState.highlightColor"
+                    type="color"
+                    class="h-10 w-14 rounded-lg border bg-white"
+                  />
+                  <UInput
+                    v-model="settingsState.highlightColor"
+                    placeholder="#f97316"
+                  />
+                </div>
+              </UFormGroup>
+            </div>
+          </div>
+        </UForm>
+      </UCard>
+    </div>
+
+    <div class="lg:col-span-1">
+      <UCard class="lg:sticky lg:top-4">
+        <template #header>
+          <div class="flex items-center justify-between">
+            <p class="font-semibold">
+              Preview
+            </p>
+            <UButton
+              type="submit"
+              form="team-settings-form"
+              color="neutral"
+              :loading="savingSettings"
+              :disabled="!canManage"
+            >
+              Publish
+            </UButton>
           </div>
         </template>
 
         <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-muted">Team name</p>
-              <p class="font-semibold">{{ team.name }}</p>
-            </div>
-          </div>
-          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div class="flex items-center gap-3">
-              <div class="flex-1">
-                <p class="text-sm text-muted">Background color</p>
-                <p class="font-semibold">{{ team.backgroundColor || 'Default' }}</p>
-              </div>
-              <div
-                class="h-10 w-10 rounded-lg border"
-                :style="{ backgroundColor: team.backgroundColor || fallbackBackgroundColor }"
-                title="Background preview"
-              />
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="flex-1">
-                <p class="text-sm text-muted">Text color</p>
-                <p class="font-semibold">{{ team.textColor || 'Default' }}</p>
-              </div>
-              <div
-                class="h-10 w-10 rounded-lg border flex items-center justify-center text-sm font-semibold"
-                :style="{
-                  backgroundColor: team.backgroundColor || fallbackBackgroundColor,
-                  color: team.textColor || fallbackTextColor
-                }"
-                title="Text preview"
-              >
-                Aa
-              </div>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="flex-1">
-                <p class="text-sm text-muted">Highlight color</p>
-                <p class="font-semibold">{{ team.highlightColor || 'Default' }}</p>
-              </div>
-              <div
-                class="h-10 w-10 rounded-lg border"
-                :style="{ backgroundColor: team.highlightColor || fallbackHighlightColor }"
-                title="Highlight preview"
-              />
-            </div>
-          </div>
-        </div>
-      </UCard>
-
-      <UCard>
-        <template #header>
-          <p class="font-semibold">Logo</p>
-        </template>
-        <div class="flex items-center gap-4">
-          <div
-            class="h-14 w-14 rounded-xl flex items-center justify-center text-white font-semibold text-lg border border-dashed"
-            :style="{
-              backgroundColor: team.backgroundColor || fallbackBackgroundColor,
-              color: team.textColor || fallbackTextColor
-            }"
-          >
-            <span v-if="team.logoUrl" class="sr-only">{{ team.name }}</span>
-            <NuxtImg
-              v-if="team.logoUrl"
-              :src="team.logoUrl"
-              alt=""
-              class="h-10 w-10 object-contain"
+          <p class="text-sm text-muted">
+            Quick visual check of your logo, text, and accent colors before publishing.
+          </p>
+          <div class="flex justify-center">
+            <InAppBrowserPreview
+              class="w-full max-w-md"
+              :background-color="previewBackgroundColor"
+              :text-color="previewTextColor"
+              :highlight-color="previewHighlightColor"
+              :logo-url="team.logoUrl || undefined"
             />
-            <span v-else>{{ team.name.slice(0, 2).toUpperCase() }}</span>
-          </div>
-          <div class="space-y-2">
-            <div class="flex gap-2">
-              <UButton
-                icon="i-lucide-upload"
-                color="neutral"
-                :loading="logoUploading"
-                :disabled="!canManage"
-                @click="triggerLogoPicker"
-              >
-                Upload logo
-              </UButton>
-              <UButton
-                v-if="team.logoUrl"
-                color="neutral"
-                variant="ghost"
-                :disabled="!canManage"
-                @click="removeLogo"
-              >
-                Remove
-              </UButton>
-            </div>
-            <p class="text-xs text-muted">
-              Allowed: PNG, JPG, SVG, GIF, WebP
-            </p>
-            <input
-              ref="logoInput"
-              type="file"
-              accept="image/jpeg,image/png,image/svg+xml,image/jpg,image/gif,image/webp"
-              class="hidden"
-              @change="uploadLogo"
-            >
           </div>
         </div>
       </UCard>
     </div>
-
-    <UModal v-model:open="settingsModalOpen">
-      <template #content="{ close }">
-        <UCard>
-          <template #header>
-            <div class="flex items-center justify-between">
-              <p class="font-semibold">Edit team settings</p>
-              <UBadge v-if="!canManage" color="neutral" variant="subtle">View only</UBadge>
-            </div>
-          </template>
-
-          <UForm
-            :schema="settingsSchema"
-            :state="settingsState"
-            :disabled="!canManage"
-            @submit="onSubmitSettings"
-          >
-            <div class="grid gap-4 md:grid-cols-2">
-              <UFormGroup label="Team name" name="name">
-                <UInput v-model="settingsState.name" placeholder="Team name" />
-              </UFormGroup>
-              <UFormGroup label="Background color" name="backgroundColor">
-                <div class="flex items-center gap-2">
-                  <UInput v-model="settingsState.backgroundColor" placeholder="#020618" />
-                  <div
-                    class="h-10 w-10 rounded-lg border"
-                    :style="{ backgroundColor: settingsState.backgroundColor || team.backgroundColor || fallbackBackgroundColor }"
-                    title="Background preview"
-                  />
-                </div>
-              </UFormGroup>
-              <UFormGroup label="Text color" name="textColor">
-                <div class="flex items-center gap-2">
-                  <UInput v-model="settingsState.textColor" placeholder="#ffffff" />
-                  <div
-                    class="h-10 w-10 rounded-lg border flex items-center justify-center text-sm font-semibold"
-                    :style="{
-                      backgroundColor: settingsState.backgroundColor || team.backgroundColor || fallbackBackgroundColor,
-                      color: settingsState.textColor || team.textColor || fallbackTextColor
-                    }"
-                    title="Text preview"
-                  >
-                    Aa
-                  </div>
-                </div>
-              </UFormGroup>
-              <UFormGroup label="Highlight color" name="highlightColor">
-                <div class="flex items-center gap-2">
-                  <UInput v-model="settingsState.highlightColor" placeholder="#f97316" />
-                  <div
-                    class="h-10 w-10 rounded-lg border"
-                    :style="{ backgroundColor: settingsState.highlightColor || team.highlightColor || fallbackHighlightColor }"
-                    title="Highlight preview"
-                  />
-                </div>
-              </UFormGroup>
-            </div>
-
-            <div class="flex justify-end gap-2 mt-4">
-              <UButton color="neutral" variant="ghost" @click="close">
-                Cancel
-              </UButton>
-              <UButton type="submit" color="neutral" :loading="savingSettings">
-                Save changes
-              </UButton>
-            </div>
-          </UForm>
-        </UCard>
-      </template>
-    </UModal>
   </div>
 </template>

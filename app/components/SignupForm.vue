@@ -17,7 +17,7 @@ const supabase = useSupabaseClient()
 const router = useRouter()
 const loading = ref(false)
 const requestURL = useRequestURL()
-const redirectTo = computed(() => process.client ? `${window.location.origin}/dashboard` : `${requestURL.origin}/dashboard`)
+const redirectTo = computed(() => import.meta.client ? `${window.location.origin}/dashboard` : `${requestURL.origin}/dashboard`)
 const linkSent = ref(false)
 const lastEmail = ref('')
 
@@ -69,7 +69,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
 }
 
 async function signUpWithProvider(provider: 'google' | 'github') {
-  if (!process.client) return
+  if (!import.meta.client) return
   loading.value = true
   const { error } = await supabase.auth.signInWithOAuth({
     provider,

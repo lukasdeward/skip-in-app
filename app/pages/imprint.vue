@@ -1,4 +1,3 @@
-
 <template>
   <div class="max-w-xl mx-auto p-3 mb-6 prose prose-neutral">
     <h1>Imprint</h1>
@@ -12,9 +11,8 @@
 </template>
 
 <script lang="ts" setup>
-import { useSeoMeta } from 'nuxt/app';
+import { useSeoMeta } from 'nuxt/app'
 import { computed } from 'vue'
-
 
 const fallbackContent = computed(() => ({
   title: 'Imprint',

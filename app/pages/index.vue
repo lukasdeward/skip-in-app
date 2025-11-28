@@ -20,7 +20,7 @@ function onSubmitLink() {
   router.replace({ query })
   showSignup.value = true
 
-  if (process.client && userUrl.value) {
+  if (import.meta.client && userUrl.value) {
     try {
       localStorage.setItem('landing:last-url', userUrl.value.trim())
     } catch (error) {

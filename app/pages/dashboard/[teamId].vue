@@ -74,8 +74,14 @@ watch(teamId, () => {
 
 <template>
   <div class="space-y-10 max-w-7xl mx-auto">
-    <UCard v-if="teamPending" class="flex justify-center gap-3 text-muted">
-      <UIcon name="i-lucide-loader-2" class="animate-spin" />
+    <UCard
+      v-if="teamPending"
+      class="flex justify-center gap-3 text-muted"
+    >
+      <UIcon
+        name="i-lucide-loader-2"
+        class="animate-spin"
+      />
       Loading team...
     </UCard>
 
@@ -104,7 +110,10 @@ watch(teamId, () => {
             color: team.textColor || fallbackTextColor
           }"
         >
-          <span v-if="team.logoUrl" class="sr-only">{{ team.name }}</span>
+          <span
+            v-if="team.logoUrl"
+            class="sr-only"
+          >{{ team.name }}</span>
           <NuxtImg
             v-if="team.logoUrl"
             :src="team.logoUrl"
@@ -114,8 +123,12 @@ watch(teamId, () => {
           <span v-else>{{ team.name.slice(0, 2).toUpperCase() }}</span>
         </div>
         <div class="flex-1 min-w-0">
-          <p class="text-xl font-semibold truncate">{{ team.name }}</p>
-          <p class="text-muted text-sm">Role: {{ team.role.toLowerCase() }}</p>
+          <p class="text-xl font-semibold truncate">
+            {{ team.name }}
+          </p>
+          <p class="text-muted text-sm">
+            Role: {{ team.role.toLowerCase() }}
+          </p>
         </div>
         <UButton
           label="Back to dashboard"
@@ -139,11 +152,20 @@ watch(teamId, () => {
           />
         </div>
 
-        <div v-if="activeTab === 'links'" class="space-y-4">
-          <TeamLinksSection :team-id="team.id" :can-manage="canManageTeam" />
+        <div
+          v-if="activeTab === 'links'"
+          class="space-y-4"
+        >
+          <TeamLinksSection
+            :team-id="team.id"
+            :can-manage="canManageTeam"
+          />
         </div>
 
-        <div v-else-if="activeTab === 'settings'" class="space-y-6">
+        <div
+          v-else-if="activeTab === 'settings'"
+          class="space-y-6"
+        >
           <TeamSettingsSection
             :team-id="team.id"
             :team="team"
@@ -152,11 +174,20 @@ watch(teamId, () => {
           />
         </div>
 
-        <div v-else-if="activeTab === 'members'" class="space-y-4">
-          <TeamMembersSection :team-id="team.id" :can-manage="canManageMembers" />
+        <div
+          v-else-if="activeTab === 'members'"
+          class="space-y-4"
+        >
+          <TeamMembersSection
+            :team-id="team.id"
+            :can-manage="canManageMembers"
+          />
         </div>
 
-        <div v-else-if="activeTab === 'billing'" class="text-muted">
+        <div
+          v-else-if="activeTab === 'billing'"
+          class="text-muted"
+        >
           Billing and subscription details. (Coming soon)
         </div>
       </div>

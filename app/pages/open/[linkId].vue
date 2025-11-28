@@ -108,11 +108,11 @@ const {
   error,
   refresh
 } = await useFetch<{
-  targetUrl: string,
-  logoUrl?: string | null,
-  teamName?: string | null,
-  backgroundColor?: string | null,
-  textColor?: string | null,
+  targetUrl: string
+  logoUrl?: string | null
+  teamName?: string | null
+  backgroundColor?: string | null
+  textColor?: string | null
   highlightColor?: string | null
 }>(() => `/api/open/${linkId.value}`, {
   server: true,
@@ -275,7 +275,6 @@ useSeoMeta({
     />
 
     <div class="max-w-3xl py-10">
-
       <div
         v-if="showDiagnostics && detectedLabels.length > 0"
         class="mt-6 space-y-2 text-sm"
@@ -296,7 +295,6 @@ useSeoMeta({
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>

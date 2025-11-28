@@ -108,16 +108,21 @@ watch([teamsFetched, teams, () => user.value], () => {
 
 <template>
   <div class="space-y-10">
-
     <UPageSection
       title="Teams"
       description="Your teams and workspaces."
     >
-      <div v-if="!user" class="text-muted">
+      <div
+        v-if="!user"
+        class="text-muted"
+      >
         Sign in to view your teams.
       </div>
 
-      <div v-else class="space-y-4">
+      <div
+        v-else
+        class="space-y-4"
+      >
         <UAlert
           v-if="teamsError"
           color="error"
@@ -126,60 +131,73 @@ watch([teamsFetched, teams, () => user.value], () => {
           :description="teamsError?.message || 'Please try again.'"
         />
 
-        <div v-if="teamsPending" class="w-full text-4xl flex justify-center">
+        <div
+          v-if="teamsPending"
+          class="w-full text-4xl flex justify-center"
+        >
           <UIcon
             name="i-lucide-loader-2"
             class="animate-spin inline-block mr-2"
           />
         </div>
 
-        <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div
+          v-else
+          class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
+        >
           <NuxtLink
             v-for="team in teams"
             :key="team.id"
             :to="`/dashboard/${team.id}`"
           >
-          <UCard 
-            :ui="{ body: 'flex items-center gap-4' }"
-            class="border border-dashed"
-          >
-            <div
-              class="h-12 w-12 rounded-xl flex items-center justify-center text-white font-semibold"
-              :style="{
-                backgroundColor: team.backgroundColor || fallbackBackgroundColor,
-                color: team.textColor || fallbackTextColor
-              }"
+            <UCard
+              :ui="{ body: 'flex items-center gap-4' }"
+              class="border border-dashed"
             >
-              <span v-if="team.logoUrl" class="sr-only">{{ team.name }}</span>
-              <NuxtImg
-                v-if="team.logoUrl"
-                :src="team.logoUrl"
-                alt=""
-                class="h-10 w-10 object-contain"
-              />
-              <span v-else>{{ team.name.slice(0, 2).toUpperCase() }}</span>
-            </div>
-            <div>
-              <p class="font-medium">{{ team.name }}</p>
-              <p class="text-muted text-sm">Team ID: {{ team.id }}</p>
-              <div class="mt-2">
-                <UButton
-                  label="Open team"
-                  color="neutral"
-                  variant="ghost"
-                  size="sm"
-                  :to="`/dashboard/${team.id}`"
-                  trailing-icon="i-lucide-arrow-up-right"
+              <div
+                class="h-12 w-12 rounded-xl flex items-center justify-center text-white font-semibold"
+                :style="{
+                  backgroundColor: team.backgroundColor || fallbackBackgroundColor,
+                  color: team.textColor || fallbackTextColor
+                }"
+              >
+                <span
+                  v-if="team.logoUrl"
+                  class="sr-only"
+                >{{ team.name }}</span>
+                <NuxtImg
+                  v-if="team.logoUrl"
+                  :src="team.logoUrl"
+                  alt=""
+                  class="h-10 w-10 object-contain"
                 />
+                <span v-else>{{ team.name.slice(0, 2).toUpperCase() }}</span>
               </div>
-            </div>
-          </UCard>
+              <div>
+                <p class="font-medium">{{ team.name }}</p>
+                <p class="text-muted text-sm">Team ID: {{ team.id }}</p>
+                <div class="mt-2">
+                  <UButton
+                    label="Open team"
+                    color="neutral"
+                    variant="ghost"
+                    size="sm"
+                    :to="`/dashboard/${team.id}`"
+                    trailing-icon="i-lucide-arrow-up-right"
+                  />
+                </div>
+              </div>
+            </UCard>
           </NuxtLink>
 
           <UCard class="border-dashed flex flex-col justify-between">
             <div class="space-y-3">
-              <p class="font-medium">Create a new team</p>
-              <p class="text-muted text-sm">Spin up a workspace for your next project.</p>
+              <p class="font-medium">
+                Create a new team
+              </p>
+              <p class="text-muted text-sm">
+                Spin up a workspace for your next project.
+              </p>
               <UInput
                 v-model="newTeamName"
                 placeholder="Team name"
@@ -200,6 +218,5 @@ watch([teamsFetched, teams, () => user.value], () => {
         </div>
       </div>
     </UPageSection>
-
   </div>
 </template>

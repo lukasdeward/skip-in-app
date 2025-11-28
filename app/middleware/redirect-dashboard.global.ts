@@ -19,7 +19,7 @@ export default defineNuxtRouteMiddleware((to) => {
 
   const result = handleRedirect()
 
-  if (process.client) {
+  if (import.meta.client) {
     watch(() => user.value, () => {
       handleRedirect()
     })

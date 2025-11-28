@@ -130,7 +130,7 @@ const saveInlineEdit = async (link: TeamLink) => {
 }
 
 const deleteLink = async (link: TeamLink) => {
-  if (!props.teamId || !process.client) return
+  if (!props.teamId || !import.meta.client) return
   const confirmed = window.confirm(`Delete link "${link.targetUrl}"?`)
   if (!confirmed) return
 
@@ -189,8 +189,12 @@ const copySkipUrl = async (link: TeamLink) => {
   <div class="space-y-4">
     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p class="font-semibold">Links</p>
-        <p class="text-muted text-sm">Routes created for this team.</p>
+        <p class="font-semibold">
+          Links
+        </p>
+        <p class="text-muted text-sm">
+          Routes created for this team.
+        </p>
       </div>
       <div class="flex gap-2">
         <UButton
@@ -211,8 +215,14 @@ const copySkipUrl = async (link: TeamLink) => {
     </div>
 
     <UCard>
-      <div v-if="linksPending" class="flex items-center gap-2 text-muted">
-        <UIcon name="i-lucide-loader-2" class="animate-spin" />
+      <div
+        v-if="linksPending"
+        class="flex items-center gap-2 text-muted"
+      >
+        <UIcon
+          name="i-lucide-loader-2"
+          class="animate-spin"
+        />
         Loading links...
       </div>
       <UAlert
@@ -222,10 +232,16 @@ const copySkipUrl = async (link: TeamLink) => {
         title="Could not load links"
         :description="linksError?.data?.message || linksError?.message || 'Please try again.'"
       />
-      <div v-else-if="links.length === 0" class="text-muted">
+      <div
+        v-else-if="links.length === 0"
+        class="text-muted"
+      >
         No links yet. Create your first link to get started.
       </div>
-      <div v-else class="space-y-3">
+      <div
+        v-else
+        class="space-y-3"
+      >
         <div
           v-for="link in links"
           :key="link.id"
@@ -258,7 +274,10 @@ const copySkipUrl = async (link: TeamLink) => {
                   :loading="copyingLinkId === link.id"
                   @click.stop="copySkipUrl(link)"
                 />
-                <UIcon name="i-lucide-arrow-right" class="text-muted" />
+                <UIcon
+                  name="i-lucide-arrow-right"
+                  class="text-muted"
+                />
                 <span class="text-sm font-medium break-all text-neutral-800 dark:text-neutral-100">
                   {{ link.targetUrl }}
                 </span>
@@ -287,7 +306,10 @@ const copySkipUrl = async (link: TeamLink) => {
                     :loading="copyingLinkId === link.id"
                     @click.stop="copySkipUrl(link)"
                   />
-                  <UIcon name="i-lucide-arrow-right" class="text-muted" />
+                  <UIcon
+                    name="i-lucide-arrow-right"
+                    class="text-muted"
+                  />
                   <UInput
                     v-model="editingTargetUrl"
                     class="w-full sm:w-80"
@@ -317,7 +339,12 @@ const copySkipUrl = async (link: TeamLink) => {
             </div>
 
             <div class="flex items-center gap-2 self-start sm:self-center">
-              <UBadge color="neutral" variant="subtle">{{ link.clickCount }} clicks</UBadge>
+              <UBadge
+                color="neutral"
+                variant="subtle"
+              >
+                {{ link.clickCount }} clicks
+              </UBadge>
               <UButton
                 icon="i-lucide-trash-2"
                 color="error"
@@ -338,7 +365,13 @@ const copySkipUrl = async (link: TeamLink) => {
           <template #header>
             <div class="flex items-center justify-between">
               <span class="font-semibold">Add link</span>
-              <UBadge v-if="!canManage" color="neutral" variant="subtle">View only</UBadge>
+              <UBadge
+                v-if="!canManage"
+                color="neutral"
+                variant="subtle"
+              >
+                View only
+              </UBadge>
             </div>
           </template>
 
@@ -348,8 +381,14 @@ const copySkipUrl = async (link: TeamLink) => {
             :disabled="!canManage"
             @submit="onCreateLink"
           >
-            <UFormGroup label="Target URL" name="targetUrl">
-              <UInput v-model="newLinkState.targetUrl" placeholder="https://example.com/landing" />
+            <UFormGroup
+              label="Target URL"
+              name="targetUrl"
+            >
+              <UInput
+                v-model="newLinkState.targetUrl"
+                placeholder="https://example.com/landing"
+              />
             </UFormGroup>
 
             <div class="flex justify-end gap-2">

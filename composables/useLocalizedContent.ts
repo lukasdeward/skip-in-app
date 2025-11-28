@@ -4,7 +4,7 @@ type Translations<T> = Record<string, T>
 
 export function useLocalizedContent<T = Record<string, any>>(slug: string, fallbackLocale = 'en') {
   const locale = computed(() => {
-    if (process.client) {
+    if (import.meta.client) {
       return navigator.language?.split('-')[0] || fallbackLocale
     }
 

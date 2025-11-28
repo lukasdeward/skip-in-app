@@ -7,7 +7,6 @@ defineProps<{
   backgroundColor?: string | null
   highlightColor?: string | null
 }>()
-
 </script>
 
 <template>
@@ -26,7 +25,7 @@ defineProps<{
             :src="logoUrl"
             alt="Team logo"
             class="h-full w-full object-contain"
-          />
+          >
         </div>
         <div class="leading-tight">
           <p class="text-xs uppercase tracking-wide opacity-80">
@@ -37,7 +36,6 @@ defineProps<{
           </p>
         </div>
       </div>
-
     </div>
   </div>
 </template>

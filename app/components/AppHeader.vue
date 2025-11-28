@@ -60,8 +60,8 @@ const logout = async () => {
           color="neutral"
           variant="outline"
           :loading="loggingOut"
-          @click="logout"
           class="hidden lg:inline-flex"
+          @click="logout"
         />
         <UButton
           icon="i-lucide-log-out"
