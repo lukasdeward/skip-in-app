@@ -21,6 +21,9 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<{
     name?: string
+    backgroundColor?: string | null
+    textColor?: string | null
+    // TODO: remove primaryColor once all clients use backgroundColor
     primaryColor?: string | null
     logoUrl?: string | null
     font?: string | null
@@ -49,9 +52,15 @@ export default defineEventHandler(async (event) => {
       updates.name = name
     }
 
-    if (body.primaryColor !== undefined) {
-      const color = body.primaryColor?.toString().trim()
-      updates.primaryColor = color || null
+    const providedBackground = body.backgroundColor ?? body.primaryColor
+    if (providedBackground !== undefined) {
+      const color = providedBackground?.toString().trim()
+      updates.backgroundColor = color || null
+    }
+
+    if (body.textColor !== undefined) {
+      const color = body.textColor?.toString().trim()
+      updates.textColor = color || null
     }
 
     if (body.logoUrl !== undefined) {
@@ -77,7 +86,8 @@ export default defineEventHandler(async (event) => {
       id: team.id,
       name: team.name,
       logoUrl: team.logoUrl,
-      primaryColor: team.primaryColor,
+      backgroundColor: team.backgroundColor,
+      textColor: team.textColor,
       font: team.font,
       role: membership.role
     }

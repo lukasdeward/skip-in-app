@@ -11,8 +11,12 @@ type TeamSummary = {
   id: string
   name: string
   logoUrl?: string | null
-  primaryColor?: string | null
+  backgroundColor?: string | null
+  textColor?: string | null
 }
+
+const fallbackBackgroundColor = '#020618'
+const fallbackTextColor = '#ffffff'
 
 const {
   data: teams,
@@ -140,7 +144,10 @@ watch([teamsFetched, teams, () => user.value], () => {
           >
             <div
               class="h-12 w-12 rounded-xl flex items-center justify-center text-white font-semibold"
-              :style="{ backgroundColor: team.primaryColor || '#020618' }"
+              :style="{
+                backgroundColor: team.backgroundColor || fallbackBackgroundColor,
+                color: team.textColor || fallbackTextColor
+              }"
             >
               <span v-if="team.logoUrl" class="sr-only">{{ team.name }}</span>
               <NuxtImg

@@ -8,10 +8,14 @@ type TeamDetails = {
   id: string
   name: string
   logoUrl?: string | null
-  primaryColor?: string | null
+  backgroundColor?: string | null
+  textColor?: string | null
   font?: string | null
   role: TeamRole
 }
+
+const fallbackBackgroundColor = '#020618'
+const fallbackTextColor = '#ffffff'
 
 const tabs = [
   { label: 'Links', value: 'links', icon: 'i-lucide-link' },
@@ -94,7 +98,10 @@ watch(teamId, () => {
       <UCard :ui="{ body: 'flex items-center gap-4' }">
         <div
           class="h-14 w-14 rounded-xl flex items-center justify-center text-white font-semibold text-lg"
-          :style="{ backgroundColor: team.primaryColor || '#020618' }"
+          :style="{
+            backgroundColor: team.backgroundColor || fallbackBackgroundColor,
+            color: team.textColor || fallbackTextColor
+          }"
         >
           <span v-if="team.logoUrl" class="sr-only">{{ team.name }}</span>
           <NuxtImg

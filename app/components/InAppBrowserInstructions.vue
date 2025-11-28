@@ -1,52 +1,41 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   browserName: string
+  logoUrl?: string | null
+  teamName?: string | null
+  textColor?: string | null
+  backgroundColor?: string | null
 }>()
 
-const steps = computed(() => [
-  'Tap the menu in the top right corner.',
-  `Choose "Open in browser" or "Open in ${props.browserName}".`,
-  `If you cannot, copy the link and paste it into ${props.browserName}.`
-])
 </script>
 
 <template>
-  <div class="relative rounded-lg border border-dashed bg-gray-50 p-4 dark:bg-gray-900/40">
+  <div :style="{ color: textColor || undefined }">
     <UIcon
       name="i-typcn-arrow-back"
-      class="absolute -top-6 right-2 h-20 w-20 text-orange-500 -rotate-270"
+      class="absolute -top-2 right-2 h-20 w-20 text-orange-500 -rotate-270"
       aria-hidden="true"
     />
-    <div class="flex items-start gap-3">
-      <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm dark:bg-gray-800">
-        <UIcon
-          name="i-lucide-info"
-          class="h-6 w-6 text-amber-500"
-        />
-      </div>
-      <div class="flex-1 space-y-3">
-        <div>
-          <p class="font-semibold text-2xl">
-            Open in {{ browserName }}
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm dark:bg-gray-800 overflow-hidden">
+          <img
+            v-if="logoUrl"
+            :src="logoUrl"
+            alt="Team logo"
+            class="h-full w-full object-contain"
+          />
+        </div>
+        <div class="leading-tight">
+          <p class="text-xs uppercase tracking-wide opacity-80">
+            Opening link from
           </p>
-          <p class="text-muted text-sm">
-            Move out of the in-app browser so the link can complete.
+          <p class="font-semibold">
+            {{ teamName || 'Team link' }}
           </p>
         </div>
-        <ul class="space-y-2 text-sm">
-          <li
-            v-for="step in steps"
-            :key="step"
-            class="flex gap-2"
-          >
-            <UIcon
-              name="i-lucide-check"
-              class="mt-0.5 h-4 w-4 text-emerald-500"
-            />
-            <span class="leading-snug">{{ step }}</span>
-          </li>
-        </ul>
       </div>
+
     </div>
   </div>
 </template>

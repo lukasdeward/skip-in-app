@@ -8,6 +8,12 @@ const toast = useToast()
 const { copy } = useClipboard()
 const showDiagnostics = useState('open-show-diagnostics', () => false)
 const linkId = computed(() => route.params.linkId as string)
+const defaultBackgroundColor = '#020618'
+const defaultTextColor = '#ffffff'
+const openTheme = useState('open-theme', () => ({
+  backgroundColor: defaultBackgroundColor,
+  textColor: defaultTextColor
+}))
 
 const shouldShowWebViewWarning = ref(false)
 const browserName = ref('Safari')
@@ -30,14 +36,15 @@ const detected = ref<null | {
 
 const detectWebView = () => {
   const userAgent = window.navigator.userAgent || window.navigator.vendor || ''
-  const brands = (window.navigator.userAgentData?.brands || []).map(({ brand }) => brand)
+  const navigatorWithUAData = window.navigator as Navigator & { userAgentData?: { brands?: Array<{ brand: string }> } }
+  const brands = (navigatorWithUAData.userAgentData?.brands || []).map(({ brand }) => brand)
   const isIOS = /iphone|ipod|ipad/i.test(userAgent)
   const isAndroid = /android/i.test(userAgent)
   const standalone = 'standalone' in window.navigator && window.navigator.standalone
   const isSafari = /safari/i.test(userAgent) && !/crios|fxios|edgios/i.test(userAgent)
 
   const isTikTok = /(tiktok|ttwebview|bytedancewebview|aweme|musical_ly)/i.test(userAgent)
-    || brands.some(brand => /tiktok|bytedance/i.test(brand))
+    || brands.some((brand: string) => /tiktok|bytedance/i.test(brand))
     || /tiktok\.com/i.test(document.referrer || '')
 
   const isInstagram = /Instagram/i.test(userAgent)
@@ -99,7 +106,13 @@ const {
   pending,
   error,
   refresh
-} = await useFetch<{ targetUrl: string }>(() => `/api/open/${linkId.value}`, {
+} = await useFetch<{
+  targetUrl: string,
+  logoUrl?: string | null,
+  teamName?: string | null,
+  backgroundColor?: string | null,
+  textColor?: string | null
+}>(() => `/api/open/${linkId.value}`, {
   server: true,
   immediate: true,
   key: () => `open-link-${linkId.value}`
@@ -168,6 +181,13 @@ const message = computed(() => {
 })
 
 const targetUrl = computed(() => data.value?.targetUrl ?? null)
+const backgroundColor = computed(() => data.value?.backgroundColor?.trim() || defaultBackgroundColor)
+const textColor = computed(() => data.value?.textColor?.trim() || defaultTextColor)
+
+watchEffect(() => {
+  openTheme.value.backgroundColor = backgroundColor.value
+  openTheme.value.textColor = textColor.value
+})
 
 const primaryPlatform = computed(() => {
   if (!detected.value) return 'Unknown'
@@ -204,6 +224,8 @@ const copying = ref(false)
 let copyResetTimer: ReturnType<typeof setTimeout> | null = null
 
 const copyButtonLabel = computed(() => copyState.value === 'copied' ? 'Link copied' : 'Copy link')
+const logoUrl = computed(() => data.value?.logoUrl ?? null)
+const teamName = computed(() => data.value?.teamName ?? 'Team link')
 
 const copyLink = async () => {
   if (!import.meta.client || !targetUrl.value) return
@@ -235,16 +257,25 @@ useSeoMeta({
 </script>
 
 <template>
-  <InAppBrowserInstructions
-        class="mt-4"
-        :browser-name="browserName"
-      />
-  
-  <div class="max-w-3xl mx-auto py-16 px-4">
+  <div
+    class="max-w-5xl mx-auto w-full px-4 pt-6 space-y-6"
+    :style="{ color: textColor }"
+  >
+    <InAppBrowserInstructions
+      class="mt-2"
+      :browser-name="browserName"
+      :logo-url="logoUrl || undefined"
+      :team-name="teamName || undefined"
+      :text-color="textColor"
+      :background-color="backgroundColor"
+    />
+
+    <div class="max-w-3xl py-10">
 
       <div
         v-if="showDiagnostics && detectedLabels.length > 0"
         class="mt-6 space-y-2 text-sm"
+        :style="{ color: textColor }"
       >
         <p class="font-semibold">
           WebView diagnostics
@@ -254,12 +285,14 @@ useSeoMeta({
             v-for="item in detectedLabels"
             :key="item.label"
             class="flex flex-col sm:flex-row sm:items-start sm:gap-2 border border-dashed rounded-lg p-3"
+            :style="{ borderColor: textColor }"
           >
-            <span class="text-muted w-32 shrink-0">{{ item.label }}</span>
+            <span class="w-32 shrink-0 opacity-80">{{ item.label }}</span>
             <span class="break-all">{{ item.value }}</span>
           </div>
         </div>
       </div>
 
     </div>
+  </div>
 </template>

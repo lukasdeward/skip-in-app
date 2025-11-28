@@ -15,10 +15,27 @@ export default defineEventHandler(async (event) => {
   try {
     const link = await prisma.link.update({
       where: { id: linkId },
-      data: { clickCount: { increment: 1 } }
+      data: { clickCount: { increment: 1 } },
+      select: {
+        targetUrl: true,
+        team: {
+          select: {
+            logoUrl: true,
+            name: true,
+            backgroundColor: true,
+            textColor: true
+          }
+        }
+      }
     })
 
-    return { targetUrl: link.targetUrl }
+    return {
+      targetUrl: link.targetUrl,
+      logoUrl: link.team?.logoUrl ?? null,
+      teamName: link.team?.name ?? null,
+      backgroundColor: link.team?.backgroundColor ?? null,
+      textColor: link.team?.textColor ?? null
+    }
   } catch (error: any) {
     if (error?.code === 'P2025') {
       throw createError({ statusCode: 404, message: 'Link not found' })

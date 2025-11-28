@@ -27,7 +27,8 @@ export default defineEventHandler(async (event) => {
         id: true,
         name: true,
         logoUrl: true,
-        primaryColor: true
+        backgroundColor: true,
+        textColor: true
       }
     })
   } catch (error: any) {

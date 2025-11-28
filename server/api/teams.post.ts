@@ -48,7 +48,8 @@ export default defineEventHandler(async (event) => {
         id: true,
         name: true,
         logoUrl: true,
-        primaryColor: true
+        backgroundColor: true,
+        textColor: true
       }
     })
 
@@ -64,7 +65,8 @@ export default defineEventHandler(async (event) => {
       id: team.id,
       name: team.name,
       logoUrl: team.logoUrl,
-      primaryColor: team.primaryColor
+      backgroundColor: team.backgroundColor,
+      textColor: team.textColor
     }
   } catch (error: any) {
     console.error('[teams.post] Failed to create team', error)

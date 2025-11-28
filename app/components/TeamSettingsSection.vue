@@ -8,7 +8,8 @@ const props = defineProps<{
     id: string
     name: string
     logoUrl?: string | null
-    primaryColor?: string | null
+    backgroundColor?: string | null
+    textColor?: string | null
   }
   canManage: boolean
 }>()
@@ -18,18 +19,21 @@ const emit = defineEmits<{
 }>()
 
 const toast = useToast()
-const supabase = useSupabaseClient()
+const fallbackBackgroundColor = '#020618'
+const fallbackTextColor = '#ffffff'
 
 const settingsSchema = z.object({
   name: z.string().trim().min(1, 'Team name is required'),
-  primaryColor: z.string().optional()
+  backgroundColor: z.string().optional(),
+  textColor: z.string().optional()
 })
 
 type SettingsForm = z.input<typeof settingsSchema>
 
 const settingsState = reactive<SettingsForm>({
   name: '',
-  primaryColor: ''
+  backgroundColor: '',
+  textColor: ''
 })
 
 const savingSettings = ref(false)
@@ -37,7 +41,8 @@ const settingsModalOpen = ref(false)
 
 watch(() => props.team, (value) => {
   settingsState.name = value?.name || ''
-  settingsState.primaryColor = value?.primaryColor || ''
+  settingsState.backgroundColor = value?.backgroundColor || ''
+  settingsState.textColor = value?.textColor || ''
 }, { immediate: true, deep: true })
 
 const onSubmitSettings = async (payload: FormSubmitEvent<SettingsForm>) => {
@@ -49,7 +54,8 @@ const onSubmitSettings = async (payload: FormSubmitEvent<SettingsForm>) => {
       method: 'PATCH',
       body: {
         name: payload.data.name.trim(),
-        primaryColor: payload.data.primaryColor?.trim() || null
+        backgroundColor: payload.data.backgroundColor?.trim() || null,
+        textColor: payload.data.textColor?.trim() || null
       }
     })
 
@@ -89,36 +95,18 @@ const uploadLogo = async (event: Event) => {
   logoUploading.value = true
 
   try {
-    const cleanName = file.name.toLowerCase().replace(/\s+/g, '-')
-    const unique = (crypto.randomUUID?.() || Math.random().toString(36).slice(2, 10))
-    const path = `${props.teamId}/${Date.now()}-${unique}-${cleanName}`
+    const formData = new FormData()
+    formData.append('logo', file)
 
-    const { error: uploadError } = await supabase.storage.from('logos').upload(path, file, {
-      cacheControl: '3600',
-      upsert: true,
-      contentType: file.type
-    })
-
-    if (uploadError) {
-      throw uploadError
-    }
-
-    const { data } = supabase.storage.from('logos').getPublicUrl(path)
-    const logoUrl = data?.publicUrl
-
-    if (!logoUrl) {
-      throw new Error('Logo URL could not be generated')
-    }
-
-    await $fetch(`/api/teams/${props.teamId}`, {
-      method: 'PATCH',
-      body: { logoUrl }
+    await $fetch(`/api/teams/${props.teamId}/logo`, {
+      method: 'POST',
+      body: formData
     })
 
     toast.add({ title: 'Logo updated', color: 'success' })
     emit('updated')
   } catch (error: any) {
-    const message = error?.message || 'Failed to upload logo'
+    const message = error?.data?.message || error?.message || 'Failed to upload logo'
     toast.add({ title: 'Upload failed', description: message, color: 'error' })
   } finally {
     logoUploading.value = false
@@ -179,16 +167,34 @@ watch(() => props.teamId, () => {
               <p class="font-semibold">{{ team.name }}</p>
             </div>
           </div>
-          <div class="flex items-center gap-3">
-            <div class="flex-1">
-              <p class="text-sm text-muted">Primary color</p>
-              <p class="font-semibold">{{ team.primaryColor || 'Default' }}</p>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="flex items-center gap-3">
+              <div class="flex-1">
+                <p class="text-sm text-muted">Background color</p>
+                <p class="font-semibold">{{ team.backgroundColor || 'Default' }}</p>
+              </div>
+              <div
+                class="h-10 w-10 rounded-lg border"
+                :style="{ backgroundColor: team.backgroundColor || fallbackBackgroundColor }"
+                title="Background preview"
+              />
             </div>
-            <div
-              class="h-10 w-10 rounded-lg border"
-              :style="{ backgroundColor: team.primaryColor || '#020618' }"
-              title="Preview"
-            />
+            <div class="flex items-center gap-3">
+              <div class="flex-1">
+                <p class="text-sm text-muted">Text color</p>
+                <p class="font-semibold">{{ team.textColor || 'Default' }}</p>
+              </div>
+              <div
+                class="h-10 w-10 rounded-lg border flex items-center justify-center text-sm font-semibold"
+                :style="{
+                  backgroundColor: team.backgroundColor || fallbackBackgroundColor,
+                  color: team.textColor || fallbackTextColor
+                }"
+                title="Text preview"
+              >
+                Aa
+              </div>
+            </div>
           </div>
         </div>
       </UCard>
@@ -200,7 +206,10 @@ watch(() => props.teamId, () => {
         <div class="flex items-center gap-4">
           <div
             class="h-14 w-14 rounded-xl flex items-center justify-center text-white font-semibold text-lg border border-dashed"
-            :style="{ backgroundColor: team.primaryColor || '#020618' }"
+            :style="{
+              backgroundColor: team.backgroundColor || fallbackBackgroundColor,
+              color: team.textColor || fallbackTextColor
+            }"
           >
             <span v-if="team.logoUrl" class="sr-only">{{ team.name }}</span>
             <NuxtImg
@@ -267,14 +276,29 @@ watch(() => props.teamId, () => {
               <UFormGroup label="Team name" name="name">
                 <UInput v-model="settingsState.name" placeholder="Team name" />
               </UFormGroup>
-              <UFormGroup label="Primary color" name="primaryColor">
+              <UFormGroup label="Background color" name="backgroundColor">
                 <div class="flex items-center gap-2">
-                  <UInput v-model="settingsState.primaryColor" placeholder="#020618" />
+                  <UInput v-model="settingsState.backgroundColor" placeholder="#020618" />
                   <div
                     class="h-10 w-10 rounded-lg border"
-                    :style="{ backgroundColor: settingsState.primaryColor || team.primaryColor || '#020618' }"
-                    title="Preview"
+                    :style="{ backgroundColor: settingsState.backgroundColor || team.backgroundColor || fallbackBackgroundColor }"
+                    title="Background preview"
                   />
+                </div>
+              </UFormGroup>
+              <UFormGroup label="Text color" name="textColor">
+                <div class="flex items-center gap-2">
+                  <UInput v-model="settingsState.textColor" placeholder="#ffffff" />
+                  <div
+                    class="h-10 w-10 rounded-lg border flex items-center justify-center text-sm font-semibold"
+                    :style="{
+                      backgroundColor: settingsState.backgroundColor || team.backgroundColor || fallbackBackgroundColor,
+                      color: settingsState.textColor || team.textColor || fallbackTextColor
+                    }"
+                    title="Text preview"
+                  >
+                    Aa
+                  </div>
                 </div>
               </UFormGroup>
             </div>

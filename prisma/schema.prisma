@@ -23,7 +23,8 @@ model Team {
   id                     String       @id @default(cuid())
   customerId             String
   name                   String
-  primaryColor           String?      @map("primary_color")
+  backgroundColor        String?      @map("primary_color")
+  textColor              String?      @map("text_color")
   logoUrl                String?      @map("logo_url")
   font                   String?
   stripeSubscriptionId   String       @unique @map("stripe_subscription_id")

@@ -34,7 +34,8 @@ export default defineEventHandler(async (event) => {
       id: team.id,
       name: team.name,
       logoUrl: team.logoUrl,
-      primaryColor: team.primaryColor,
+      backgroundColor: team.backgroundColor,
+      textColor: team.textColor,
       font: team.font,
       role: membership.role
     }

@@ -28,7 +28,8 @@ export default defineNuxtConfig({
       saveRedirectToCookie: true
     },
     url: process.env.SUPABASE_URL,
-    key: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY
+    key: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY,
+    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
   },
 
   nitro: {
@@ -38,8 +39,32 @@ export default defineNuxtConfig({
       ],
       crawlLinks: true
     },
+    rollupConfig: {
+      external: [
+        '@supabase/supabase-js',
+        '@supabase/ssr',
+        '@supabase/auth-js',
+        '@supabase/functions-js',
+        '@supabase/postgrest-js',
+        '@supabase/realtime-js',
+        '@supabase/storage-js'
+      ]
+    },
     externals: {
-      external: ['@prisma/client', '.prisma/client', 'prisma']
+      trace: false,
+      inline: [],
+      external: [
+        '@prisma/client',
+        '.prisma/client',
+        'prisma',
+        '@supabase/supabase-js',
+        '@supabase/ssr',
+        '@supabase/auth-js',
+        '@supabase/functions-js',
+        '@supabase/postgrest-js',
+        '@supabase/realtime-js',
+        '@supabase/storage-js'
+      ]
     },
     moduleSideEffects: ['@prisma/client', 'prisma']
   },
