@@ -22,7 +22,7 @@ const linkSchema = z.object({
 
 type LinkForm = z.input<typeof linkSchema>
 
-const linkState = reactive<LinkForm>({
+const newLinkState = reactive<LinkForm>({
   targetUrl: ''
 })
 
@@ -30,13 +30,20 @@ const links = ref<TeamLink[]>([])
 const linksPending = ref(false)
 const linksError = ref<any>(null)
 const linksLoaded = ref(false)
-const linkSaving = ref(false)
+const creatingLink = ref(false)
 const editingLinkId = ref<string | null>(null)
+const editingTargetUrl = ref('')
+const savingLinkId = ref<string | null>(null)
 const linkModalOpen = ref(false)
 
 const resetLinkForm = () => {
-  linkState.targetUrl = ''
+  newLinkState.targetUrl = ''
+}
+
+const resetInlineEdit = () => {
   editingLinkId.value = null
+  editingTargetUrl.value = ''
+  savingLinkId.value = null
 }
 
 watch(linkModalOpen, (open) => {
@@ -61,29 +68,21 @@ const fetchLinks = async () => {
   }
 }
 
-const onSubmitLink = async (payload: FormSubmitEvent<LinkForm>) => {
+const onCreateLink = async (payload: FormSubmitEvent<LinkForm>) => {
   if (!props.teamId) return
 
-  linkSaving.value = true
+  creatingLink.value = true
 
   try {
     const body = {
       targetUrl: payload.data.targetUrl.trim()
     }
 
-    if (editingLinkId.value) {
-      await $fetch(`/api/teams/${props.teamId}/links/${editingLinkId.value}`, {
-        method: 'PATCH',
-        body
-      })
-      toast.add({ title: 'Link updated', color: 'success' })
-    } else {
-      await $fetch(`/api/teams/${props.teamId}/links`, {
-        method: 'POST',
-        body
-      })
-      toast.add({ title: 'Link created', color: 'success' })
-    }
+    await $fetch(`/api/teams/${props.teamId}/links`, {
+      method: 'POST',
+      body
+    })
+    toast.add({ title: 'Link created', color: 'success' })
 
     resetLinkForm()
     await fetchLinks()
@@ -92,14 +91,42 @@ const onSubmitLink = async (payload: FormSubmitEvent<LinkForm>) => {
     const message = error?.data?.message || error?.message || 'Unable to save link'
     toast.add({ title: 'Save failed', description: message, color: 'error' })
   } finally {
-    linkSaving.value = false
+    creatingLink.value = false
   }
 }
 
-const startEditLink = (link: TeamLink) => {
+const startInlineEdit = (link: TeamLink) => {
+  if (!props.canManage || savingLinkId.value) return
   editingLinkId.value = link.id
-  linkState.targetUrl = link.targetUrl
-  linkModalOpen.value = true
+  editingTargetUrl.value = link.targetUrl
+}
+
+const saveInlineEdit = async (link: TeamLink) => {
+  if (!props.teamId || !editingLinkId.value) return
+
+  const parsed = linkSchema.safeParse({ targetUrl: editingTargetUrl.value })
+  if (!parsed.success) {
+    const message = parsed.error.errors?.[0]?.message || 'Enter a valid URL'
+    toast.add({ title: 'Invalid URL', description: message, color: 'error' })
+    return
+  }
+
+  savingLinkId.value = link.id
+
+  try {
+    await $fetch(`/api/teams/${props.teamId}/links/${link.id}`, {
+      method: 'PATCH',
+      body: { targetUrl: parsed.data.targetUrl.trim() }
+    })
+    toast.add({ title: 'Link updated', color: 'success' })
+    resetInlineEdit()
+    await fetchLinks()
+  } catch (error: any) {
+    const message = error?.data?.message || error?.message || 'Unable to save link'
+    toast.add({ title: 'Save failed', description: message, color: 'error' })
+  } finally {
+    savingLinkId.value = null
+  }
 }
 
 const deleteLink = async (link: TeamLink) => {
@@ -110,6 +137,9 @@ const deleteLink = async (link: TeamLink) => {
   try {
     await $fetch(`/api/teams/${props.teamId}/links/${link.id}`, { method: 'DELETE' })
     toast.add({ title: 'Link deleted', color: 'success' })
+    if (editingLinkId.value === link.id) {
+      resetInlineEdit()
+    }
     await fetchLinks()
   } catch (error: any) {
     const message = error?.data?.message || error?.message || 'Unable to delete link'
@@ -126,6 +156,7 @@ watch(() => props.teamId, () => {
   links.value = []
   linksLoaded.value = false
   resetLinkForm()
+  resetInlineEdit()
   linkModalOpen.value = false
   if (props.teamId) {
     fetchLinks()
@@ -135,6 +166,23 @@ watch(() => props.teamId, () => {
 const skipDomain = 'skip.social/open'
 const formatSkipUrlText = (id: string) => `${skipDomain}/${id}`
 const formatSkipUrlHref = (id: string) => `https://${formatSkipUrlText(id)}`
+const { copy } = useClipboard()
+const copyingLinkId = ref<string | null>(null)
+
+const copySkipUrl = async (link: TeamLink) => {
+  const url = formatSkipUrlHref(link.id)
+  copyingLinkId.value = link.id
+
+  try {
+    await copy(url)
+    toast.add({ title: 'Link copied', description: url, color: 'neutral' })
+  } catch (error: any) {
+    const message = error?.message || 'Unable to copy link'
+    toast.add({ title: 'Copy failed', description: message, color: 'error' })
+  } finally {
+    copyingLinkId.value = null
+  }
+}
 </script>
 
 <template>
@@ -181,39 +229,104 @@ const formatSkipUrlHref = (id: string) => `https://${formatSkipUrlText(id)}`
         <div
           v-for="link in links"
           :key="link.id"
-          class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 border border-dashed rounded-xl p-4"
+          class="group rounded-xl border border-dashed p-4 transition-colors hover:border-neutral-300 hover:bg-neutral-50/50 dark:hover:border-neutral-700 dark:hover:bg-neutral-900/50"
         >
-          <div class="space-y-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <p class="text-xs uppercase text-muted">Skip Url</p>
-              <a
-                :href="formatSkipUrlHref(link.id)"
-                target="_blank"
-                rel="noreferrer"
-                class="font-semibold text-sm break-all"
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <div class="flex-1 space-y-2">
+              <div
+                v-if="editingLinkId !== link.id"
+                class="flex flex-wrap items-center gap-2 rounded-lg px-2 py-1"
+                :class="canManage ? 'cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-900' : ''"
+                :title="canManage ? 'Click to edit destination URL' : undefined"
+                @click="startInlineEdit(link)"
               >
-                {{ formatSkipUrlText(link.id) }}
-              </a>
-              <UBadge color="neutral" variant="subtle">{{ link.clickCount }} clicks</UBadge>
+                <a
+                  :href="formatSkipUrlHref(link.id)"
+                  target="_blank"
+                  rel="noreferrer"
+                  class="font-semibold text-sm break-all text-neutral-900 underline-offset-2 hover:underline dark:text-neutral-50"
+                  @click.stop
+                >
+                  {{ formatSkipUrlText(link.id) }}
+                </a>
+                <UButton
+                  size="2xs"
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-lucide-copy"
+                  :title="`Copy ${formatSkipUrlText(link.id)}`"
+                  :loading="copyingLinkId === link.id"
+                  @click.stop="copySkipUrl(link)"
+                />
+                <UIcon name="i-lucide-arrow-right" class="text-muted" />
+                <span class="text-sm font-medium break-all text-neutral-800 dark:text-neutral-100">
+                  {{ link.targetUrl }}
+                </span>
+              </div>
+              <form
+                v-else
+                class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
+                @submit.prevent="saveInlineEdit(link)"
+              >
+                <div class="flex flex-1 flex-wrap items-center gap-2">
+                  <a
+                    :href="formatSkipUrlHref(link.id)"
+                    target="_blank"
+                    rel="noreferrer"
+                    class="font-semibold text-sm break-all text-neutral-900 underline-offset-2 hover:underline dark:text-neutral-50"
+                    @click.stop
+                  >
+                    {{ formatSkipUrlText(link.id) }}
+                  </a>
+                  <UButton
+                    size="2xs"
+                    color="neutral"
+                    variant="ghost"
+                    icon="i-lucide-copy"
+                    :title="`Copy ${formatSkipUrlText(link.id)}`"
+                    :loading="copyingLinkId === link.id"
+                    @click.stop="copySkipUrl(link)"
+                  />
+                  <UIcon name="i-lucide-arrow-right" class="text-muted" />
+                  <UInput
+                    v-model="editingTargetUrl"
+                    class="w-full sm:w-80"
+                    placeholder="https://example.com/landing"
+                  />
+                </div>
+                <div class="flex items-center gap-2">
+                  <UButton
+                    type="submit"
+                    size="xs"
+                    color="neutral"
+                    :loading="savingLinkId === link.id"
+                  >
+                    Save
+                  </UButton>
+                  <UButton
+                    type="button"
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click.stop="resetInlineEdit"
+                  >
+                    Cancel
+                  </UButton>
+                </div>
+              </form>
             </div>
-            <p class="text-sm text-muted break-all">Destination: {{ link.targetUrl }}</p>
-          </div>
 
-          <div class="flex items-center gap-2 self-end">
-            <UButton
-              icon="i-lucide-pencil"
-              color="neutral"
-              variant="ghost"
-              :disabled="!canManage"
-              @click="startEditLink(link)"
-            />
-            <UButton
-              icon="i-lucide-trash-2"
-              color="error"
-              variant="ghost"
-              :disabled="!canManage"
-              @click="deleteLink(link)"
-            />
+            <div class="flex items-center gap-2 self-start sm:self-center">
+              <UBadge color="neutral" variant="subtle">{{ link.clickCount }} clicks</UBadge>
+              <UButton
+                icon="i-lucide-trash-2"
+                color="error"
+                variant="ghost"
+                :disabled="!canManage"
+                class="opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                @click.stop="deleteLink(link)"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -224,19 +337,19 @@ const formatSkipUrlHref = (id: string) => `https://${formatSkipUrlText(id)}`
         <UCard>
           <template #header>
             <div class="flex items-center justify-between">
-              <span class="font-semibold">{{ editingLinkId ? 'Edit link' : 'Add link' }}</span>
+              <span class="font-semibold">Add link</span>
               <UBadge v-if="!canManage" color="neutral" variant="subtle">View only</UBadge>
             </div>
           </template>
 
           <UForm
             :schema="linkSchema"
-            :state="linkState"
+            :state="newLinkState"
             :disabled="!canManage"
-            @submit="onSubmitLink"
+            @submit="onCreateLink"
           >
             <UFormGroup label="Target URL" name="targetUrl">
-              <UInput v-model="linkState.targetUrl" placeholder="https://example.com/landing" />
+              <UInput v-model="newLinkState.targetUrl" placeholder="https://example.com/landing" />
             </UFormGroup>
 
             <div class="flex justify-end gap-2">
@@ -250,9 +363,9 @@ const formatSkipUrlHref = (id: string) => `https://${formatSkipUrlText(id)}`
               <UButton
                 type="submit"
                 color="neutral"
-                :loading="linkSaving"
+                :loading="creatingLink"
               >
-                {{ editingLinkId ? 'Update link' : 'Create link' }}
+                Create link
               </UButton>
             </div>
           </UForm>
