@@ -43,13 +43,12 @@ const whiteLogo = computed(() => shouldUseLightLogo.value)
 </script>
 
 <template>
-  {{ whiteLogo ? 'White logo true' : 'false' }}
   <NuxtImg
-    v-if="!whiteLogo"
+    v-if="whiteLogo"
     alt="Skip In-App logo"
     :class="`${height} w-auto`"
     format="png"
-    src="/skip-in-app.png"
+    src="/skip-in-app-white.png"
     draggable="false"
   />
   <NuxtImg
@@ -57,7 +56,7 @@ const whiteLogo = computed(() => shouldUseLightLogo.value)
     alt="Skip In-App logo"
     :class="`${height} w-auto`"
     format="png"
-    src="/skip-in-app-white.png"
+    src="/skip-in-app.png"
     draggable="false"
   />
 </template>
