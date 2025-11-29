@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const colorMode = useColorMode()
-
 const props = defineProps<{
   height?: string
   backgroundColor?: string | null
@@ -28,35 +26,32 @@ const isDarkBackground = computed(() => {
   return luminance < 0.5
 })
 
-const shouldUseLightLogo = computed(() => {
-  if (isDarkBackground.value !== null) return isDarkBackground.value
-  if (colorMode.preference === 'system' && import.meta.client) {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches
-  }
-  return colorMode.value === 'dark'
-})
-
-
 const height = computed(() => props.height ?? 'h-18')
 
-const whiteLogo = computed(() => shouldUseLightLogo.value)
+const logoChoice = computed<'white' | 'default' | null>(() => {
+  if (isDarkBackground.value === null) return null
+  return isDarkBackground.value ? 'white' : 'default'
+})
 </script>
 
 <template>
   <NuxtImg
-    v-if="whiteLogo"
+    v-if="logoChoice !== null"
     alt="Skip In-App logo"
     :class="`${height} w-auto`"
     format="png"
-    src="/skip-in-app-white.png"
+    :src="logoChoice === 'white' ? '/skip-in-app-white.png' : '/skip-in-app.png'"
     draggable="false"
   />
-  <NuxtImg
-    v-else
-    alt="Skip In-App logo"
-    :class="`${height} w-auto`"
-    format="png"
-    src="/skip-in-app.png"
-    draggable="false"
-  />
+  <picture v-else class="inline-flex items-center">
+    <source srcset="/skip-in-app-white.png" media="(prefers-color-scheme: dark)">
+    <source srcset="/skip-in-app.png" media="(prefers-color-scheme: light)">
+    <NuxtImg
+      alt="Skip In-App logo"
+      :class="`${height} w-auto`"
+      format="png"
+      src="/skip-in-app.png"
+      draggable="false"
+    />
+  </picture>
 </template>
