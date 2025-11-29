@@ -18,6 +18,12 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2024-07-11',
 
+  colorMode: {
+    preference: 'system',
+    fallback: 'light',
+    classSuffix: ''
+  },
+
   nitro: {
     externals: {
       inline: ['@supabase/supabase-js']

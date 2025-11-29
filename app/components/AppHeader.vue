@@ -52,7 +52,6 @@ const logout = async () => {
     />
 
     <template #right>
-      <UColorModeButton />
 
       <template v-if="user">
         <UButton

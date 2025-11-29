@@ -3,6 +3,14 @@ const colorMode = useColorMode()
 
 const color = computed(() => colorMode.value === 'dark' ? '#020618' : 'white')
 
+if (import.meta.client) {
+  // Force color mode to follow system preference only
+  colorMode.preference = 'system'
+  watchEffect(() => {
+    colorMode.value = colorMode.system || 'light'
+  })
+}
+
 useHead({
   meta: [
     { charset: 'utf-8' },
