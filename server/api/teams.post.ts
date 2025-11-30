@@ -1,16 +1,12 @@
 import { createError, defineEventHandler, readBody } from 'h3'
 import { randomUUID } from 'crypto'
 import { TeamRole } from '@prisma/client'
-import { serverSupabaseUser } from '#supabase/server'
 import prisma from '~~/server/utils/prisma'
+import { generateUniqueTeamSlug } from '~~/server/utils/teamSlug'
+import { requireUser } from '~~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event)
-  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
-
-  if (!user || !customerId) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
+  const { user, customerId } = await requireUser(event)
 
   if (!process.env.DATABASE_URL) {
     throw createError({ statusCode: 503, message: 'Database not configured' })
@@ -38,15 +34,19 @@ export default defineEventHandler(async (event) => {
       }
     })
 
+    const slug = await generateUniqueTeamSlug(name, prisma)
+
     const team = await prisma.team.create({
       data: {
         name,
+        slug,
         customerId,
         stripeSubscriptionId: `temp_${randomUUID()}`
       },
       select: {
         id: true,
         name: true,
+        slug: true,
         logoUrl: true,
         backgroundColor: true,
         textColor: true,
@@ -65,6 +65,7 @@ export default defineEventHandler(async (event) => {
     return {
       id: team.id,
       name: team.name,
+      slug: team.slug,
       logoUrl: team.logoUrl,
       backgroundColor: team.backgroundColor,
       textColor: team.textColor,

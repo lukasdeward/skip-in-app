@@ -23,6 +23,7 @@ model Team {
   id                     String       @id @default(cuid())
   customerId             String
   name                   String
+  slug                   String?      @unique
   backgroundColor        String?      @map("primary_color")
   textColor              String?      @map("text_color")
   highlightColor         String?      @map("highlight_color")
@@ -54,11 +55,14 @@ model TeamMember {
 model Link {
   id          String   @id @default(cuid())
   teamId      String
+  shortId     Int?     @map("short_id")
   targetUrl   String   @map("target_url")
   clickCount  Int      @default(0) @map("click_count")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, shortId])
 }
 
 enum TeamRole {

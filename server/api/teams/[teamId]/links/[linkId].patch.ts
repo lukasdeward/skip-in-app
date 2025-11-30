@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
-import { serverSupabaseUser } from '#supabase/server'
 import { TeamRole } from '@prisma/client'
 import prisma from '~~/server/utils/prisma'
+import { requireUser } from '~~/server/utils/auth'
 
 const validateUrl = (value?: string | null) => {
   if (!value) return null
@@ -14,14 +14,9 @@ const validateUrl = (value?: string | null) => {
 }
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event).catch(() => null)
+  const { customerId } = await requireUser(event)
   const teamId = getRouterParam(event, 'teamId')
   const linkId = getRouterParam(event, 'linkId')
-  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
-
-  if (!user || !customerId) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
 
   if (!teamId || !linkId) {
     throw createError({ statusCode: 400, message: 'Team ID and link ID are required' })
@@ -75,6 +70,7 @@ export default defineEventHandler(async (event) => {
 
     return {
       id: link.id,
+      shortId: link.shortId,
       targetUrl: link.targetUrl,
       clickCount: link.clickCount,
       createdAt: link.createdAt

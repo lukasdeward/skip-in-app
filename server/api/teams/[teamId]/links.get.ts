@@ -1,15 +1,10 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
-import { serverSupabaseUser } from '#supabase/server'
 import prisma from '~~/server/utils/prisma'
+import { requireUser } from '~~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event).catch(() => null)
+  const { customerId } = await requireUser(event)
   const teamId = getRouterParam(event, 'teamId')
-  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
-
-  if (!user || !customerId) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
 
   if (!teamId) {
     throw createError({ statusCode: 400, message: 'Team ID is required' })
@@ -33,8 +28,27 @@ export default defineEventHandler(async (event) => {
       orderBy: { createdAt: 'desc' }
     })
 
+    const missingShortIds = links.filter(link => link.shortId == null)
+
+    if (missingShortIds.length > 0) {
+      let nextShortId = links.reduce((max, link) => Math.max(max, link.shortId ?? 0), 0) + 1
+
+      await prisma.$transaction(async (tx) => {
+        for (const link of missingShortIds) {
+          await tx.link.update({
+            where: { id: link.id },
+            data: { shortId: nextShortId }
+          })
+
+          link.shortId = nextShortId
+          nextShortId += 1
+        }
+      })
+    }
+
     return links.map(link => ({
       id: link.id,
+      shortId: link.shortId,
       targetUrl: link.targetUrl,
       clickCount: link.clickCount,
       createdAt: link.createdAt

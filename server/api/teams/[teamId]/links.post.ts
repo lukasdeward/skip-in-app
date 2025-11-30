@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
-import { serverSupabaseUser } from '#supabase/server'
 import { TeamRole } from '@prisma/client'
 import prisma from '~~/server/utils/prisma'
+import { requireUser } from '~~/server/utils/auth'
 
 const validateUrl = (value?: string | null) => {
   if (!value) return null
@@ -14,13 +14,8 @@ const validateUrl = (value?: string | null) => {
 }
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event).catch(() => null)
+  const { customerId } = await requireUser(event)
   const teamId = getRouterParam(event, 'teamId')
-  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
-
-  if (!user || !customerId) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
 
   if (!teamId) {
     throw createError({ statusCode: 400, message: 'Team ID is required' })
@@ -53,22 +48,33 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, message: 'A valid target URL is required' })
     }
 
-    const link = await prisma.link.create({
-      data: {
-        teamId,
-        targetUrl
-      }
+    const link = await prisma.$transaction(async (tx) => {
+      const { _max } = await tx.link.aggregate({
+        where: { teamId },
+        _max: { shortId: true }
+      })
+
+      const nextShortId = (_max?.shortId ?? 0) + 1
+
+      return tx.link.create({
+        data: {
+          teamId,
+          targetUrl,
+          shortId: nextShortId
+        }
+      })
     })
 
     return {
       id: link.id,
+      shortId: link.shortId,
       targetUrl: link.targetUrl,
       clickCount: link.clickCount,
       createdAt: link.createdAt
     }
   } catch (error: any) {
     if (error?.code === 'P2002') {
-      throw createError({ statusCode: 409, message: 'Link already exists for this team' })
+      throw createError({ statusCode: 409, message: 'A short link already exists for this team' })
     }
 
     if (error?.statusCode) {

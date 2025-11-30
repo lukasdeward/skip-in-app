@@ -1,16 +1,12 @@
 import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
-import { serverSupabaseUser } from '#supabase/server'
 import { TeamRole } from '@prisma/client'
 import prisma from '~~/server/utils/prisma'
+import { generateUniqueTeamSlug } from '~~/server/utils/teamSlug'
+import { requireUser } from '~~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event).catch(() => null)
+  const { customerId } = await requireUser(event)
   const teamId = getRouterParam(event, 'teamId')
-  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
-
-  if (!user || !customerId) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
 
   if (!teamId) {
     throw createError({ statusCode: 400, message: 'Team ID is required' })
@@ -52,6 +48,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, message: 'Team name cannot be empty' })
       }
       updates.name = name
+      updates.slug = await generateUniqueTeamSlug(name, prisma, teamId)
     }
 
     const providedBackground = body.backgroundColor ?? body.primaryColor
@@ -92,6 +89,7 @@ export default defineEventHandler(async (event) => {
     return {
       id: team.id,
       name: team.name,
+      slug: team.slug,
       logoUrl: team.logoUrl,
       backgroundColor: team.backgroundColor,
       textColor: team.textColor,

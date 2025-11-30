@@ -4,11 +4,14 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 
 const props = defineProps<{
   teamId: string
+  teamSlug?: string | null
+  teamName: string
   canManage: boolean
 }>()
 
 type TeamLink = {
   id: string
+  shortId: number | null
   targetUrl: string
   clickCount: number
   createdAt: string
@@ -163,14 +166,32 @@ watch(() => props.teamId, () => {
   }
 }, { immediate: true })
 
+const buildTeamSlug = (value: string) => {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    || 'team'
+}
+
+const resolvedTeamSlug = computed(() => {
+  const explicit = props.teamSlug?.toString().trim().toLowerCase()
+  if (explicit) {
+    return encodeURIComponent(explicit)
+  }
+
+  return encodeURIComponent(buildTeamSlug(props.teamName || 'team'))
+})
+
 const skipDomain = 'skip.social/open'
-const formatSkipUrlText = (id: string) => `${skipDomain}/${id}`
-const formatSkipUrlHref = (id: string) => `https://${formatSkipUrlText(id)}`
+const resolveLinkIdentifier = (link: TeamLink) => link.shortId ?? link.id
+const formatSkipUrlText = (link: TeamLink) => `${skipDomain}/${resolvedTeamSlug.value}?id=${resolveLinkIdentifier(link)}`
+const formatSkipUrlHref = (link: TeamLink) => `https://${formatSkipUrlText(link)}`
 const { copy } = useClipboard()
 const copyingLinkId = ref<string | null>(null)
 
 const copySkipUrl = async (link: TeamLink) => {
-  const url = formatSkipUrlHref(link.id)
+  const url = formatSkipUrlHref(link)
   copyingLinkId.value = link.id
 
   try {
@@ -257,20 +278,20 @@ const copySkipUrl = async (link: TeamLink) => {
                 @click="startInlineEdit(link)"
               >
                 <a
-                  :href="formatSkipUrlHref(link.id)"
+                  :href="formatSkipUrlHref(link)"
                   target="_blank"
                   rel="noreferrer"
                   class="font-semibold text-sm break-all text-neutral-900 underline-offset-2 hover:underline dark:text-neutral-50"
                   @click.stop
                 >
-                  {{ formatSkipUrlText(link.id) }}
+                  {{ formatSkipUrlText(link) }}
                 </a>
                 <UButton
                   size="2xs"
                   color="neutral"
                   variant="ghost"
                   icon="i-lucide-copy"
-                  :title="`Copy ${formatSkipUrlText(link.id)}`"
+                  :title="`Copy ${formatSkipUrlText(link)}`"
                   :loading="copyingLinkId === link.id"
                   @click.stop="copySkipUrl(link)"
                 />
@@ -289,20 +310,20 @@ const copySkipUrl = async (link: TeamLink) => {
               >
                 <div class="flex flex-1 flex-wrap items-center gap-2">
                   <a
-                    :href="formatSkipUrlHref(link.id)"
+                    :href="formatSkipUrlHref(link)"
                     target="_blank"
                     rel="noreferrer"
                     class="font-semibold text-sm break-all text-neutral-900 underline-offset-2 hover:underline dark:text-neutral-50"
                     @click.stop
                   >
-                    {{ formatSkipUrlText(link.id) }}
+                    {{ formatSkipUrlText(link) }}
                   </a>
                   <UButton
                     size="2xs"
                     color="neutral"
                     variant="ghost"
                     icon="i-lucide-copy"
-                    :title="`Copy ${formatSkipUrlText(link.id)}`"
+                    :title="`Copy ${formatSkipUrlText(link)}`"
                     :loading="copyingLinkId === link.id"
                     @click.stop="copySkipUrl(link)"
                   />

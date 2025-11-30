@@ -7,6 +7,7 @@ type TeamRole = 'OWNER' | 'ADMIN' | 'MEMBER'
 type TeamDetails = {
   id: string
   name: string
+  slug?: string | null
   logoUrl?: string | null
   backgroundColor?: string | null
   textColor?: string | null
@@ -158,6 +159,8 @@ watch(teamId, () => {
         >
           <TeamLinksSection
             :team-id="team.id"
+            :team-name="team.name"
+            :team-slug="team.slug"
             :can-manage="canManageTeam"
           />
         </div>

@@ -1,8 +1,9 @@
 import { createError, defineEventHandler, getRouterParam, readMultipartFormData } from 'h3'
 import { randomUUID } from 'crypto'
-import { serverSupabaseServiceRole, serverSupabaseUser } from '#supabase/server'
+import { serverSupabaseServiceRole } from '#supabase/server'
 import { TeamRole } from '@prisma/client'
 import prisma from '~~/server/utils/prisma'
+import { requireUser } from '~~/server/utils/auth'
 
 const allowedLogoTypes = new Set([
   'image/jpeg',
@@ -14,13 +15,8 @@ const allowedLogoTypes = new Set([
 ])
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event).catch(() => null)
+  const { customerId } = await requireUser(event)
   const teamId = getRouterParam(event, 'teamId')
-  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
-
-  if (!user || !customerId) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
 
   if (!process.env.SUPABASE_URL) {
     throw createError({ statusCode: 503, message: 'Storage not configured' })

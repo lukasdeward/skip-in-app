@@ -7,7 +7,12 @@ const route = useRoute()
 const toast = useToast()
 const { copy } = useClipboard()
 const showDiagnostics = useState('open-show-diagnostics', () => false)
-const linkId = computed(() => route.params.linkId as string)
+const teamSlug = computed(() => route.params.teamName as string)
+const linkIdentifier = computed(() => {
+  const value = route.query.id
+  const raw = Array.isArray(value) ? value[0] : value
+  return raw?.toString() || null
+})
 const defaultBackgroundColor = '#020618'
 const defaultTextColor = '#ffffff'
 const defaultHighlightColor = '#f97316'
@@ -114,10 +119,15 @@ const {
   backgroundColor?: string | null
   textColor?: string | null
   highlightColor?: string | null
-}>(() => `/api/open/${linkId.value}`, {
+}>(() => {
+  const slug = teamSlug.value
+  const id = linkIdentifier.value
+  const query = id ? `?id=${encodeURIComponent(id)}` : ''
+  return `/api/open/${slug}${query}`
+}, {
   server: true,
   immediate: true,
-  key: () => `open-link-${linkId.value}`
+  key: () => `open-link-${teamSlug.value}-${linkIdentifier.value || 'legacy'}`
 })
 
 const isLocalhost = computed(() => {
@@ -148,7 +158,7 @@ onMounted(() => {
   }
 })
 
-watch(linkId, async () => {
+watch([teamSlug, linkIdentifier], async () => {
   await refresh()
   await attemptRedirect()
 })

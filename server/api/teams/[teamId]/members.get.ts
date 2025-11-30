@@ -1,19 +1,10 @@
 import { createError, defineEventHandler, getRouterParam } from 'h3'
-import { serverSupabaseUser } from '#supabase/server'
 import prisma from '~~/server/utils/prisma'
+import { requireUser } from '~~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event).catch(() => null)
+  const { customerId } = await requireUser(event)
   const teamId = getRouterParam(event, 'teamId')
-  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
-
-  if (!user) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
-
-  if (!customerId) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
 
   if (!teamId) {
     throw createError({ statusCode: 400, message: 'Team ID is required' })

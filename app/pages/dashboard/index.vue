@@ -10,6 +10,7 @@ useSeoMeta({
 type TeamSummary = {
   id: string
   name: string
+  slug?: string | null
   logoUrl?: string | null
   backgroundColor?: string | null
   textColor?: string | null

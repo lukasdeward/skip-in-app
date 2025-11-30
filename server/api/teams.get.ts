@@ -1,14 +1,9 @@
 import { createError, defineEventHandler } from 'h3'
-import { serverSupabaseUser } from '#supabase/server'
 import prisma from '~~/server/utils/prisma'
+import { requireUser } from '~~/server/utils/auth'
 
 export default defineEventHandler(async (event) => {
-  const user = await serverSupabaseUser(event).catch(() => null)
-  const customerId = typeof user?.id === 'string' ? user.id : user?.id?.toString()
-
-  if (!user || !customerId) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' })
-  }
+  const { customerId } = await requireUser(event)
 
   if (!process.env.DATABASE_URL) {
     console.warn('[teams.get] DATABASE_URL missing; returning empty list.')
@@ -27,6 +22,7 @@ export default defineEventHandler(async (event) => {
       select: {
         id: true,
         name: true,
+        slug: true,
         logoUrl: true,
         backgroundColor: true,
         textColor: true,
