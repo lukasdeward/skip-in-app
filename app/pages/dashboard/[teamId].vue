@@ -43,7 +43,12 @@ const loadTeam = async () => {
   teamError.value = null
 
   try {
-    team.value = await $fetch<TeamDetails>(`/api/teams/${teamId.value}`)
+    const { data, error } = await useFetch<TeamDetails>(`/api/teams/${teamId.value}`, {
+      server: false,
+      key: `team-details-${teamId.value}-${Date.now()}`
+    })
+    if (error.value) throw error.value
+    team.value = data.value || null
   } catch (error: any) {
     teamError.value = error
     team.value = null

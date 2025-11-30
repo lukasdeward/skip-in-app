@@ -54,7 +54,7 @@ const extractDomainName = (input: string) => {
   return base ? `${base.charAt(0).toUpperCase()}${base.slice(1)}` : host
 }
 
-const createTeam = (overrideName?: string) => {
+const createTeam = async (overrideName?: string) => {
   const name = (overrideName ?? newTeamName.value).trim()
 
   if (!name) {
@@ -69,10 +69,13 @@ const createTeam = (overrideName?: string) => {
   creatingTeam.value = true
 
   try {
-    $fetch('/api/teams', {
+    const { error } = await useFetch('/api/teams', {
       method: 'POST',
-      body: { name }
+      body: { name },
+      server: false,
+      key: `create-team-${Date.now()}`
     })
+    if (error.value) throw error.value
 
     toast.add({ title: 'Team created', description: `${name} is ready.`, color: 'success' })
     newTeamName.value = ''

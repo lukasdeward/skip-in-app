@@ -1,13 +1,22 @@
 <script setup>
+const colorMode = useColorMode()
+const darkBackgroundColor = '#020618'
+const lightBackgroundColor = '#ffffff'
+const darkTextColor = '#ffffff'
+const lightTextColor = '#0f172a'
+const currentColorScheme = computed<'light' | 'dark'>(() => colorMode.value === 'dark' ? 'dark' : 'light')
+const defaultBackgroundColor = computed(() => currentColorScheme.value === 'dark' ? darkBackgroundColor : lightBackgroundColor)
+const defaultTextColor = computed(() => currentColorScheme.value === 'dark' ? darkTextColor : lightTextColor)
+
 const showDiagnostics = useState('open-show-diagnostics', () => false)
 const openTheme = useState('open-theme', () => ({
-  backgroundColor: '#020618',
-  textColor: '#ffffff'
+  backgroundColor: defaultBackgroundColor.value,
+  textColor: defaultTextColor.value
 }))
 
 const themeStyles = computed(() => ({
-  backgroundColor: openTheme.value?.backgroundColor || '#020618',
-  color: openTheme.value?.textColor || '#ffffff'
+  backgroundColor: openTheme.value?.backgroundColor || defaultBackgroundColor.value,
+  color: openTheme.value?.textColor || defaultTextColor.value
 }))
 
 const toggleDiagnostics = () => {
@@ -34,7 +43,7 @@ const toggleDiagnostics = () => {
         <AppLogo
           height="h-8"
           class="w-auto transition group-hover:opacity-80"
-          :background-color="openTheme.value?.backgroundColor || '#020618'"
+          :background-color="openTheme.value?.backgroundColor || defaultBackgroundColor.value"
         />
       </button>
     </div>

@@ -4,8 +4,7 @@ definePageMeta({
 })
 
 const route = useRoute()
-const toast = useToast()
-const { copy } = useClipboard()
+const colorMode = useColorMode()
 const showDiagnostics = useState('open-show-diagnostics', () => false)
 const rawIdentifier = computed(() => route.params.teamName as string)
 const parsedIdentifier = computed(() => {
@@ -30,12 +29,18 @@ const linkIdentifier = computed(() => {
   const rawQuery = Array.isArray(value) ? value[0] : value
   return rawQuery?.toString() || parsedIdentifier.value.id
 })
-const defaultBackgroundColor = '#020618'
-const defaultTextColor = '#ffffff'
+
+const darkBackgroundColor = '#020618'
+const lightBackgroundColor = '#ffffff'
+const darkTextColor = '#ffffff'
+const lightTextColor = '#0f172a'
 const defaultHighlightColor = '#f97316'
+const currentColorScheme = computed<'light' | 'dark'>(() => colorMode.value === 'dark' ? 'dark' : 'light')
+const defaultBackgroundColor = computed(() => currentColorScheme.value === 'dark' ? darkBackgroundColor : lightBackgroundColor)
+const defaultTextColor = computed(() => currentColorScheme.value === 'dark' ? darkTextColor : lightTextColor)
 const openTheme = useState('open-theme', () => ({
-  backgroundColor: defaultBackgroundColor,
-  textColor: defaultTextColor
+  backgroundColor: defaultBackgroundColor.value,
+  textColor: defaultTextColor.value
 }))
 
 const shouldShowWebViewWarning = ref(false)
@@ -214,8 +219,8 @@ const message = computed(() => {
   return 'Unable to resolve this link.'
 })
 
-const backgroundColor = computed(() => data.value?.backgroundColor?.trim() || defaultBackgroundColor)
-const textColor = computed(() => data.value?.textColor?.trim() || defaultTextColor)
+const backgroundColor = computed(() => data.value?.backgroundColor?.trim() || defaultBackgroundColor.value)
+const textColor = computed(() => data.value?.textColor?.trim() || defaultTextColor.value)
 const highlightColor = computed(() => data.value?.highlightColor?.trim() || defaultHighlightColor)
 
 const syncTheme = () => {

@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<{
     name?: string
+    slug?: string | null
     backgroundColor?: string | null
     textColor?: string | null
     highlightColor?: string | null
@@ -51,7 +52,38 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, message: 'Team name cannot include dashes' })
       }
       updates.name = name
-      updates.slug = await generateUniqueTeamSlug(name, prisma, teamId)
+      if (body.slug === undefined) {
+        updates.slug = await generateUniqueTeamSlug(name, prisma, teamId)
+      }
+    }
+
+    if (body.slug !== undefined) {
+      const slug = body.slug?.toString().trim().toLowerCase()
+      if (!slug) {
+        throw createError({ statusCode: 400, message: 'Team handle cannot be empty' })
+      }
+
+      if (slug.length > 32) {
+        throw createError({ statusCode: 400, message: 'Team handle must be 32 characters or fewer' })
+      }
+
+      if (!/^[a-z0-9]+$/.test(slug)) {
+        throw createError({ statusCode: 400, message: 'Team handle can only include lowercase letters and numbers' })
+      }
+
+      const existing = await prisma.team.findFirst({
+        where: {
+          slug,
+          id: { not: teamId }
+        },
+        select: { id: true }
+      })
+
+      if (existing) {
+        throw createError({ statusCode: 400, message: 'That handle is already taken' })
+      }
+
+      updates.slug = slug
     }
 
     const providedBackground = body.backgroundColor ?? body.primaryColor

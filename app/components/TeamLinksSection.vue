@@ -61,7 +61,12 @@ const fetchLinks = async () => {
   linksError.value = null
 
   try {
-    links.value = await $fetch<TeamLink[]>(`/api/teams/${props.teamId}/links`)
+    const { data, error } = await useFetch<TeamLink[]>(`/api/teams/${props.teamId}/links`, {
+      server: false,
+      key: `team-links-${props.teamId}-${Date.now()}`
+    })
+    if (error.value) throw error.value
+    links.value = data.value || []
     linksLoaded.value = true
   } catch (error: any) {
     linksError.value = error
@@ -81,10 +86,13 @@ const onCreateLink = async (payload: FormSubmitEvent<LinkForm>) => {
       targetUrl: payload.data.targetUrl.trim()
     }
 
-    await $fetch(`/api/teams/${props.teamId}/links`, {
+    const { error } = await useFetch(`/api/teams/${props.teamId}/links`, {
       method: 'POST',
-      body
+      body,
+      server: false,
+      key: `create-link-${props.teamId}-${Date.now()}`
     })
+    if (error.value) throw error.value
     toast.add({ title: 'Link created', color: 'success' })
 
     resetLinkForm()
@@ -117,10 +125,13 @@ const saveInlineEdit = async (link: TeamLink) => {
   savingLinkId.value = link.id
 
   try {
-    await $fetch(`/api/teams/${props.teamId}/links/${link.id}`, {
+    const { error } = await useFetch(`/api/teams/${props.teamId}/links/${link.id}`, {
       method: 'PATCH',
-      body: { targetUrl: parsed.data.targetUrl.trim() }
+      body: { targetUrl: parsed.data.targetUrl.trim() },
+      server: false,
+      key: `update-link-${link.id}-${Date.now()}`
     })
+    if (error.value) throw error.value
     toast.add({ title: 'Link updated', color: 'success' })
     resetInlineEdit()
     await fetchLinks()
@@ -138,7 +149,12 @@ const deleteLink = async (link: TeamLink) => {
   if (!confirmed) return
 
   try {
-    await $fetch(`/api/teams/${props.teamId}/links/${link.id}`, { method: 'DELETE' })
+    const { error } = await useFetch(`/api/teams/${props.teamId}/links/${link.id}`, {
+      method: 'DELETE',
+      server: false,
+      key: `delete-link-${link.id}-${Date.now()}`
+    })
+    if (error.value) throw error.value
     toast.add({ title: 'Link deleted', color: 'success' })
     if (editingLinkId.value === link.id) {
       resetInlineEdit()

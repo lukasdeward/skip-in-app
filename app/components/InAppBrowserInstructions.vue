@@ -24,16 +24,10 @@ defineProps<{
           <img
             v-if="logoUrl"
             :src="logoUrl"
-            alt="Team logo"
-            class="h-12 object-contain"
-          >
-        <div class="leading-tight">
-          <p class="font-semibold">
-            {{ teamName }}
-          </p>
-        </div>
+            class="h-12"
+          />
       </div>
-      <h2 class="text-2xl font-semibold text-center">
+      <h2 class="text-2xl font-bold text-center mt-5">
         Open {{ teamName }} in {{ browserName }} to continue.
       </h2>
     </div>

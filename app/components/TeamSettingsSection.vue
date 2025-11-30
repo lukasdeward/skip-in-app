@@ -7,6 +7,7 @@ const props = defineProps<{
   team: {
     id: string
     name: string
+    slug?: string | null
     logoUrl?: string | null
     backgroundColor?: string | null
     textColor?: string | null
@@ -24,10 +25,17 @@ const fallbackBackgroundColor = '#020618'
 const fallbackTextColor = '#ffffff'
 const fallbackHighlightColor = '#f97316'
 
+const handlePattern = /^[a-z0-9]+$/
+
 const settingsSchema = z.object({
   name: z.string().trim().min(1, 'Team name is required').refine(value => !value.includes('-'), {
     message: 'Team name cannot include dashes'
   }),
+  slug: z.string()
+    .trim()
+    .min(1, 'Team handle is required')
+    .max(32, 'Team handle must be 32 characters or fewer')
+    .regex(handlePattern, 'Use lowercase letters and numbers only'),
   backgroundColor: z.string().optional(),
   textColor: z.string().optional(),
   highlightColor: z.string().optional()
@@ -37,12 +45,17 @@ type SettingsForm = z.input<typeof settingsSchema>
 
 const settingsState = reactive<SettingsForm>({
   name: '',
+  slug: '',
   backgroundColor: fallbackBackgroundColor,
   textColor: fallbackTextColor,
   highlightColor: fallbackHighlightColor
 })
 
 const savingSettings = ref(false)
+
+const buildDefaultHandle = (value: string) => {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, '') || 'team'
+}
 
 const previewBackgroundColor = computed(() => settingsState.backgroundColor?.trim()
   || props.team.backgroundColor?.trim()
@@ -56,8 +69,18 @@ const previewHighlightColor = computed(() => settingsState.highlightColor?.trim(
   || props.team.highlightColor?.trim()
   || fallbackHighlightColor)
 
+const previewTeamName = computed(() => settingsState.name?.trim() || props.team.name)
+
+watch(() => settingsState.slug, (value) => {
+  const normalized = value?.toLowerCase() || ''
+  if (normalized !== value) {
+    settingsState.slug = normalized
+  }
+})
+
 watch(() => props.team, (value) => {
   settingsState.name = value?.name || ''
+  settingsState.slug = value?.slug || buildDefaultHandle(value?.name || 'team')
   settingsState.backgroundColor = value?.backgroundColor || fallbackBackgroundColor
   settingsState.textColor = value?.textColor || fallbackTextColor
   settingsState.highlightColor = value?.highlightColor || fallbackHighlightColor
@@ -68,15 +91,19 @@ const onSubmitSettings = async (payload: FormSubmitEvent<SettingsForm>) => {
   savingSettings.value = true
 
   try {
-    await $fetch(`/api/teams/${props.teamId}`, {
+    const { error } = await useFetch(`/api/teams/${props.teamId}`, {
       method: 'PATCH',
       body: {
         name: payload.data.name.trim(),
+        slug: payload.data.slug.trim().toLowerCase(),
         backgroundColor: payload.data.backgroundColor?.trim() || null,
         textColor: payload.data.textColor?.trim() || null,
         highlightColor: payload.data.highlightColor?.trim() || null
-      }
+      },
+      server: false,
+      key: `update-team-settings-${props.teamId}-${Date.now()}`
     })
+    if (error.value) throw error.value
 
     toast.add({ title: 'Settings saved', color: 'success' })
     emit('updated')
@@ -116,10 +143,13 @@ const uploadLogo = async (event: Event) => {
     const formData = new FormData()
     formData.append('logo', file)
 
-    await $fetch(`/api/teams/${props.teamId}/logo`, {
+    const { error } = await useFetch(`/api/teams/${props.teamId}/logo`, {
       method: 'POST',
-      body: formData
+      body: formData,
+      server: false,
+      key: `upload-logo-${props.teamId}-${Date.now()}`
     })
+    if (error.value) throw error.value
 
     toast.add({ title: 'Logo updated', color: 'success' })
     emit('updated')
@@ -138,10 +168,13 @@ const removeLogo = async () => {
   if (!props.teamId) return
 
   try {
-    await $fetch(`/api/teams/${props.teamId}`, {
+    const { error } = await useFetch(`/api/teams/${props.teamId}`, {
       method: 'PATCH',
-      body: { logoUrl: null }
+      body: { logoUrl: null },
+      server: false,
+      key: `remove-logo-${props.teamId}-${Date.now()}`
     })
+    if (error.value) throw error.value
     toast.add({ title: 'Logo removed', color: 'success' })
     emit('updated')
   } catch (error: any) {
@@ -163,7 +196,7 @@ watch(() => props.teamId, () => {
       <UCard>
         <template #header>
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
+            <div class="flex w-full items-center justify-between gap-2">
               <p class="font-semibold">
                 Team settings
               </p>
@@ -174,6 +207,15 @@ watch(() => props.teamId, () => {
               >
                 View only
               </UBadge>
+            <UButton
+              type="submit"
+              form="team-settings-form"
+              color="neutral"
+              :loading="savingSettings"
+              :disabled="!canManage"
+            >
+              Publish
+            </UButton>
             </div>
           </div>
         </template>
@@ -185,6 +227,7 @@ watch(() => props.teamId, () => {
           :disabled="!canManage"
           class="space-y-8"
           @submit="onSubmitSettings"
+          v-slot="{ errors }"
         >
           <div class="flex flex-wrap items-center gap-4">
             <div
@@ -206,7 +249,7 @@ watch(() => props.teamId, () => {
               />
               <span v-else>{{ team.name.slice(0, 2).toUpperCase() }}</span>
             </div>
-            <div class="flex-1 min-w-[240px] space-y-1">
+            <div class="flex-1 min-w-60 space-y-1">
               <p class="text-sm font-semibold">
                 Logo
               </p>
@@ -245,16 +288,43 @@ watch(() => props.teamId, () => {
             </div>
           </div>
 
-          <div class="grid gap-4 sm:grid-cols-1">
-            <UFormGroup
-              label="Team name"
-              name="name"
-            >
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1">
+              <p class="text-sm font-semibold">
+                Team name
+              </p>
               <UInput
                 v-model="settingsState.name"
                 placeholder="Team name"
               />
-            </UFormGroup>
+              <p
+                v-if="errors?.[0]"
+                class="text-xs text-red-500"
+              >
+                {{ errors[0] }}
+              </p>
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-sm font-semibold">
+                  Team URL handle
+                </p>
+                <p class="text-xs text-muted">
+                  Lowercase letters and numbers only.
+                </p>
+              </div>
+              <UInput
+                v-model="settingsState.slug"
+                placeholder="acme"
+              />
+              <p
+                v-if="errors?.slug?.[0]"
+                class="text-xs text-red-500"
+              >
+                {{ errors.slug[0] }}
+              </p>
+            </div>
           </div>
 
           <div class="space-y-4">
@@ -338,6 +408,7 @@ watch(() => props.teamId, () => {
               :background-color="previewBackgroundColor"
               :text-color="previewTextColor"
               :highlight-color="previewHighlightColor"
+              :team-name="previewTeamName"
               :logo-url="team.logoUrl || undefined"
             />
           </div>

@@ -47,7 +47,12 @@ const fetchMembers = async () => {
   membersError.value = null
 
   try {
-    members.value = await $fetch<TeamMember[]>(`/api/teams/${props.teamId}/members`)
+    const { data, error } = await useFetch<TeamMember[]>(`/api/teams/${props.teamId}/members`, {
+      server: false,
+      key: `team-members-${props.teamId}-${Date.now()}`
+    })
+    if (error.value) throw error.value
+    members.value = data.value || []
     membersLoaded.value = true
   } catch (error: any) {
     membersError.value = error
@@ -66,13 +71,16 @@ const inviteMember = async () => {
   memberSaving.value = true
 
   try {
-    await $fetch(`/api/teams/${props.teamId}/members`, {
+    const { error } = await useFetch(`/api/teams/${props.teamId}/members`, {
       method: 'POST',
       body: {
         email: inviteState.email.trim().toLowerCase(),
         role: inviteState.role
-      }
+      },
+      server: false,
+      key: `add-member-${props.teamId}-${Date.now()}`
     })
+    if (error.value) throw error.value
 
     toast.add({ title: 'Member added', color: 'success' })
     inviteState.email = ''
@@ -91,10 +99,13 @@ const updateMemberRole = async (member: TeamMember, role: TeamRole) => {
   if (!props.teamId || member.role === role) return
 
   try {
-    await $fetch(`/api/teams/${props.teamId}/members/${member.id}`, {
+    const { error } = await useFetch(`/api/teams/${props.teamId}/members/${member.id}`, {
       method: 'PATCH',
-      body: { role }
+      body: { role },
+      server: false,
+      key: `update-member-${member.id}-${Date.now()}`
     })
+    if (error.value) throw error.value
     toast.add({ title: 'Role updated', color: 'success' })
     await fetchMembers()
   } catch (error: any) {
@@ -109,7 +120,12 @@ const removeMember = async (member: TeamMember) => {
   if (!confirmed) return
 
   try {
-    await $fetch(`/api/teams/${props.teamId}/members/${member.id}`, { method: 'DELETE' })
+    const { error } = await useFetch(`/api/teams/${props.teamId}/members/${member.id}`, {
+      method: 'DELETE',
+      server: false,
+      key: `remove-member-${member.id}-${Date.now()}`
+    })
+    if (error.value) throw error.value
     toast.add({ title: 'Member removed', color: 'success' })
     await fetchMembers()
   } catch (error: any) {
