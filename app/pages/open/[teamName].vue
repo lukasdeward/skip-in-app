@@ -7,11 +7,28 @@ const route = useRoute()
 const toast = useToast()
 const { copy } = useClipboard()
 const showDiagnostics = useState('open-show-diagnostics', () => false)
-const teamSlug = computed(() => route.params.teamName as string)
+const rawIdentifier = computed(() => route.params.teamName as string)
+const parsedIdentifier = computed(() => {
+  const raw = rawIdentifier.value || ''
+  const lastDash = raw.lastIndexOf('-')
+
+  if (lastDash > 0 && lastDash < raw.length - 1) {
+    return {
+      slug: raw.slice(0, lastDash),
+      id: raw.slice(lastDash + 1)
+    }
+  }
+
+  return {
+    slug: raw,
+    id: null as string | null
+  }
+})
+const teamSlug = computed(() => parsedIdentifier.value.slug)
 const linkIdentifier = computed(() => {
   const value = route.query.id
-  const raw = Array.isArray(value) ? value[0] : value
-  return raw?.toString() || null
+  const rawQuery = Array.isArray(value) ? value[0] : value
+  return rawQuery?.toString() || parsedIdentifier.value.id
 })
 const defaultBackgroundColor = '#020618'
 const defaultTextColor = '#ffffff'
@@ -122,8 +139,9 @@ const {
 }>(() => {
   const slug = teamSlug.value
   const id = linkIdentifier.value
-  const query = id ? `?id=${encodeURIComponent(id)}` : ''
-  return `/api/open/${slug}${query}`
+  return id
+    ? `/api/open/${encodeURIComponent(slug)}-${encodeURIComponent(id)}`
+    : `/api/open/${encodeURIComponent(slug)}`
 }, {
   server: true,
   immediate: true,

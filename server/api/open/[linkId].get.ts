@@ -3,12 +3,28 @@ import prisma from '~~/server/utils/prisma'
 import { buildTeamSlug } from '~~/server/utils/teamSlug'
 
 export default defineEventHandler(async (event) => {
-  const identifier = getRouterParam(event, 'linkId')
+  const identifier = (getRouterParam(event, 'linkId') || '').toString().trim()
   const query = getQuery(event)
   const rawShortId = Array.isArray(query?.id) ? query.id[0] : query?.id
   const queryId = rawShortId?.toString().trim() || null
-  const parsedShortId = queryId ? Number.parseInt(queryId, 10) : null
-  const shortId = parsedShortId !== null && !Number.isNaN(parsedShortId) && parsedShortId > 0 ? parsedShortId : null
+  const parsedQueryShortId = queryId ? Number.parseInt(queryId, 10) : null
+  const queryShortId = parsedQueryShortId !== null && !Number.isNaN(parsedQueryShortId) && parsedQueryShortId > 0
+    ? parsedQueryShortId
+    : null
+
+  let slugPart = identifier
+  let pathShortId: number | null = null
+
+  const lastDash = identifier.lastIndexOf('-')
+  if (lastDash > 0 && lastDash < identifier.length - 1) {
+    slugPart = identifier.slice(0, lastDash)
+    const candidateId = identifier.slice(lastDash + 1)
+    const parsed = Number.parseInt(candidateId, 10)
+    pathShortId = !Number.isNaN(parsed) && parsed > 0 ? parsed : null
+  }
+
+  const shortId = pathShortId ?? queryShortId
+  const normalizedSlug = slugPart.toLowerCase()
 
   if (!identifier) {
     throw createError({ statusCode: 400, message: 'Link identifier is required' })
@@ -19,8 +35,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const teamSlug = identifier.toString()
-    const normalizedSlug = teamSlug.toLowerCase()
+    const teamSlug = slugPart
     let link: {
       targetUrl: string
       team: {
@@ -32,7 +47,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    if (shortId !== null) {
+    if (shortId !== null && slugPart) {
       let team = await prisma.team.findFirst({
         where: { slug: normalizedSlug },
         select: { id: true, name: true, slug: true }
@@ -44,7 +59,18 @@ export default defineEventHandler(async (event) => {
           select: { id: true, name: true, slug: true }
         })
 
-        team = fallbackTeam.find(item => buildTeamSlug(item.name) === normalizedSlug) || null
+        const buildLegacySlug = (name: string) => name
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          || 'team'
+
+        team = fallbackTeam.find(item => {
+          const computed = buildTeamSlug(item.name)
+          const legacy = buildLegacySlug(item.name)
+          return computed === normalizedSlug || legacy === normalizedSlug
+        }) || null
       }
 
       if (!team) {

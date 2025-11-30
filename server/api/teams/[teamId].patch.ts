@@ -47,6 +47,9 @@ export default defineEventHandler(async (event) => {
       if (!name) {
         throw createError({ statusCode: 400, message: 'Team name cannot be empty' })
       }
+      if (name.includes('-')) {
+        throw createError({ statusCode: 400, message: 'Team name cannot include dashes' })
+      }
       updates.name = name
       updates.slug = await generateUniqueTeamSlug(name, prisma, teamId)
     }

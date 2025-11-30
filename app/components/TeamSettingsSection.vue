@@ -25,7 +25,9 @@ const fallbackTextColor = '#ffffff'
 const fallbackHighlightColor = '#f97316'
 
 const settingsSchema = z.object({
-  name: z.string().trim().min(1, 'Team name is required'),
+  name: z.string().trim().min(1, 'Team name is required').refine(value => !value.includes('-'), {
+    message: 'Team name cannot include dashes'
+  }),
   backgroundColor: z.string().optional(),
   textColor: z.string().optional(),
   highlightColor: z.string().optional()

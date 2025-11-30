@@ -8,12 +8,12 @@ export type AuthContext = {
 
 export const requireUser = async (event: H3Event): Promise<AuthContext> => {
   const user = await serverSupabaseUser(event)
-
+  console.log('Authenticated user:', user)
   if (!user) {
     throw createError({ statusCode: 401, message: 'Unauthorized' })
   }
 
-  const customerId = typeof user.id === 'string' ? user.id : user.id?.toString()
+  const customerId = typeof user.sub === 'string' ? user.sub : ''
 
   if (!customerId) {
     throw createError({ statusCode: 401, message: 'Unauthorized' })

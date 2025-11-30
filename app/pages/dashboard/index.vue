@@ -61,6 +61,10 @@ const createTeam = (overrideName?: string) => {
     toast.add({ title: 'Team name required', description: 'Add a name to create your team.', color: 'warning' })
     return
   }
+  if (name.includes('-')) {
+    toast.add({ title: 'Invalid name', description: 'Team name cannot include dashes.', color: 'warning' })
+    return
+  }
 
   creatingTeam.value = true
 

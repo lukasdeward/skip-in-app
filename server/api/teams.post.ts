@@ -19,6 +19,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Team name is required' })
   }
 
+  if (name.includes('-')) {
+    throw createError({ statusCode: 400, message: 'Team name cannot include dashes' })
+  }
+
   try {
     const email = user.email || (user.user_metadata as Record<string, any> | undefined)?.email || `${user.id}@example.com`
 

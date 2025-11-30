@@ -1,11 +1,12 @@
 import type { PrismaClient } from '@prisma/client'
 
 const sanitizeSlug = (value: string) => {
-  return value
+  const cleaned = value
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    || 'team'
+    .replace(/[^a-z0-9]/g, '')
+    .trim()
+
+  return cleaned || 'team'
 }
 
 export const buildTeamSlug = (name: string) => {
@@ -31,7 +32,7 @@ export const generateUniqueTeamSlug = async (name: string, prisma: PrismaClient,
       return candidate
     }
 
-    candidate = `${baseSlug}-${suffix}`
+    candidate = `${baseSlug}${suffix}`
     suffix += 1
   }
 }

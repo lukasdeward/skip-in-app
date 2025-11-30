@@ -167,11 +167,12 @@ watch(() => props.teamId, () => {
 }, { immediate: true })
 
 const buildTeamSlug = (value: string) => {
-  return value
+  const cleaned = value
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    || 'team'
+    .replace(/[^a-z0-9]/g, '')
+    .trim()
+
+  return cleaned || 'team'
 }
 
 const resolvedTeamSlug = computed(() => {
@@ -185,7 +186,7 @@ const resolvedTeamSlug = computed(() => {
 
 const skipDomain = 'skip.social/open'
 const resolveLinkIdentifier = (link: TeamLink) => link.shortId ?? link.id
-const formatSkipUrlText = (link: TeamLink) => `${skipDomain}/${resolvedTeamSlug.value}?id=${resolveLinkIdentifier(link)}`
+const formatSkipUrlText = (link: TeamLink) => `${skipDomain}/${resolvedTeamSlug.value}-${resolveLinkIdentifier(link)}`
 const formatSkipUrlHref = (link: TeamLink) => `https://${formatSkipUrlText(link)}`
 const { copy } = useClipboard()
 const copyingLinkId = ref<string | null>(null)
