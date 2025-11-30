@@ -6,6 +6,7 @@ defineProps<{
   textColor?: string | null
   backgroundColor?: string | null
   highlightColor?: string | null
+  platform: string
 }>()
 </script>
 
@@ -19,23 +20,21 @@ defineProps<{
     />
     <div class="flex flex-col gap-4">
       <div class="flex items-center gap-3">
-        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm dark:bg-gray-800 overflow-hidden">
           <img
             v-if="logoUrl"
             :src="logoUrl"
             alt="Team logo"
-            class="h-full w-full object-contain"
+            class="h-12 object-contain"
           >
-        </div>
         <div class="leading-tight">
-          <p class="text-xs uppercase tracking-wide opacity-80">
-            Opening link from
-          </p>
           <p class="font-semibold">
             {{ teamName || 'Team link' }}
           </p>
         </div>
       </div>
+      <h2 class="text-2xl font-semibold text-center">
+        Open {{ teamName }} in {{ browserName }} to continue.
+      </h2>
     </div>
   </div>
 </template>

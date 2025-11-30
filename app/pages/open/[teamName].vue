@@ -196,11 +196,16 @@ const status = computed<'loading' | 'redirecting' | 'warning' | 'error'>(() => {
 const message = computed(() => {
   if (status.value === 'loading') return 'Looking up your Skip link...'
   if (status.value === 'redirecting') return 'Redirecting you to your destination...'
-  if (status.value === 'warning') return `In-app browser detected. Open in ${browserName.value} to continue.`
+  if (status.value === 'warning') return `Open ${teamName.value} in ${browserName.value} to continue.`
   const rawError = error.value
 
   if (rawError && typeof rawError === 'object') {
-    const structured = rawError as { data?: { message?: unknown }, message?: unknown }
+    const structured = rawError as { data?: { message?: unknown, statusCode?: number }, message?: unknown, statusCode?: number }
+    const statusCode = structured.statusCode ?? structured.data?.statusCode
+    if (statusCode === 404) {
+      return 'We could not find a link for this team.'
+    }
+
     const dataMessage = structured.data?.message
     if (typeof dataMessage === 'string') return dataMessage
 
@@ -215,10 +220,13 @@ const backgroundColor = computed(() => data.value?.backgroundColor?.trim() || de
 const textColor = computed(() => data.value?.textColor?.trim() || defaultTextColor)
 const highlightColor = computed(() => data.value?.highlightColor?.trim() || defaultHighlightColor)
 
-watchEffect(() => {
+const syncTheme = () => {
   openTheme.value.backgroundColor = backgroundColor.value
   openTheme.value.textColor = textColor.value
-})
+}
+
+syncTheme()
+watchEffect(syncTheme)
 
 const primaryPlatform = computed(() => {
   if (!detected.value) return 'Unknown'
@@ -292,6 +300,7 @@ useSeoMeta({
     class="max-w-5xl mx-auto w-full px-4 pt-6 space-y-6"
     :style="{ color: textColor }"
   >
+
     <InAppBrowserInstructions
       class="mt-2"
       :browser-name="browserName"
@@ -300,6 +309,7 @@ useSeoMeta({
       :text-color="textColor"
       :background-color="backgroundColor"
       :highlight-color="highlightColor"
+      :platform="primaryPlatform"
     />
 
     <div class="max-w-3xl py-10">
