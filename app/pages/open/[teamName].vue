@@ -3,39 +3,23 @@ definePageMeta({
   layout: 'open'
 })
 
-const route = useRoute()
+type OpenLinkResponse = {
+  targetUrl: string
+  logoUrl: string | null
+  teamName: string | null
+  backgroundColor: string | null
+  textColor: string | null
+  highlightColor: string | null
+}
+
 const showDiagnostics = useState('open-show-diagnostics', () => false)
-const rawIdentifier = computed(() => route.params.teamName as string)
-const parsedIdentifier = computed(() => {
-  const raw = rawIdentifier.value || ''
-  const lastDash = raw.lastIndexOf('-')
-
-  if (lastDash > 0 && lastDash < raw.length - 1) {
-    return {
-      slug: raw.slice(0, lastDash),
-      id: raw.slice(lastDash + 1)
-    }
-  }
-
-  return {
-    slug: raw,
-    id: null as string | null
-  }
-})
-const teamSlug = computed(() => parsedIdentifier.value.slug)
-const linkIdentifier = computed(() => {
-  const value = route.query.id
-  const rawQuery = Array.isArray(value) ? value[0] : value
-  return rawQuery?.toString() || parsedIdentifier.value.id
-})
+const requestURL = import.meta.server ? useRequestURL() : null
+const requestHref = computed(() => requestURL?.href || (import.meta.client ? window.location.href : ''))
+const requestBody = computed(() => ({ url: requestHref.value }))
 
 const defaultBackgroundColor = '#ffffff'
 const defaultTextColor = '#000000'
 const defaultHighlightColor = '#f97316'
-const openTheme = useState('open-theme', () => ({
-  backgroundColor: defaultBackgroundColor,
-  textColor: defaultTextColor
-}))
 
 const shouldShowWebViewWarning = ref(false)
 const browserName = ref('Safari')
@@ -128,23 +112,13 @@ const {
   pending,
   error,
   refresh
-} = await useFetch<{
-  targetUrl: string
-  logoUrl?: string | null
-  teamName?: string | null
-  backgroundColor?: string | null
-  textColor?: string | null
-  highlightColor?: string | null
-}>(() => {
-  const slug = teamSlug.value
-  const id = linkIdentifier.value
-  return id
-    ? `/api/open/${encodeURIComponent(slug)}-${encodeURIComponent(id)}`
-    : `/api/open/${encodeURIComponent(slug)}`
-}, {
+} = await useFetch<OpenLinkResponse>('/api/open/resolve', {
+  method: 'POST',
+  body: requestBody,
   server: true,
+  lazy: false,
   immediate: true,
-  key: () => `open-link-${teamSlug.value}-${linkIdentifier.value || 'legacy'}`
+  key: () => `open-link-${requestHref.value}`
 })
 
 const isLocalhost = computed(() => {
@@ -175,10 +149,14 @@ onMounted(() => {
   }
 })
 
-watch([teamSlug, linkIdentifier], async () => {
-  await refresh()
-  await attemptRedirect()
-})
+watch(
+  requestHref,
+  async (value, oldValue) => {
+    if (!value || value === oldValue) return
+    await refresh()
+    await attemptRedirect()
+  }
+)
 
 const retry = async () => {
   await refresh()
@@ -217,13 +195,20 @@ const backgroundColor = computed(() => data.value?.backgroundColor?.trim() || de
 const textColor = computed(() => data.value?.textColor?.trim() || defaultTextColor)
 const highlightColor = computed(() => data.value?.highlightColor?.trim() || defaultHighlightColor)
 
-const syncTheme = () => {
-  openTheme.value.backgroundColor = backgroundColor.value
-  openTheme.value.textColor = textColor.value
-}
+const themeStyles = computed(() => ({
+  backgroundColor: backgroundColor.value,
+  color: textColor.value
+}))
 
-syncTheme()
-watchEffect(syncTheme)
+useHead(() => ({
+  bodyAttrs: {
+    style: `background-color:${themeStyles.value.backgroundColor};color:${themeStyles.value.color};`
+  }
+}))
+
+const toggleDiagnostics = () => {
+  showDiagnostics.value = !showDiagnostics.value
+}
 
 const primaryPlatform = computed(() => {
   if (!detected.value) return 'Unknown'
@@ -242,6 +227,19 @@ const primaryPlatform = computed(() => {
   return flags.length > 0 ? flags.join(', ') : 'Unknown'
 })
 
+const instructionImage = computed(() => {
+  if (!detected.value || !shouldShowWebViewWarning.value) return null
+
+  const options = [
+    { active: detected.value.isTikTok, file: 'tiktok.png' },
+    { active: detected.value.isInstagram, file: 'instagram.png' },
+    { active: detected.value.isSnapchat, file: 'snapchat.png' }
+  ]
+
+  const match = options.find(option => option.active)
+  return match ? `/instructions/${match.file}` : null
+})
+
 const detectedLabels = computed(() => {
   if (!detected.value) return []
 
@@ -255,9 +253,6 @@ const detectedLabels = computed(() => {
   ]
 })
 
-const copyState = ref<'idle' | 'copied'>('idle')
-const copying = ref(false)
-let copyResetTimer: ReturnType<typeof setTimeout> | null = null
 
 const logoUrl = computed(() => data.value?.logoUrl)
 const teamName = computed(() => data.value?.teamName)
@@ -269,43 +264,64 @@ useSeoMeta({
 
 <template>
   <div
-    class="max-w-5xl mx-auto w-full px-4 pt-6 space-y-6"
-    :style="{ color: textColor }"
+    class="min-h-screen flex flex-col justify-between"
+    :style="themeStyles"
   >
+    <div
+      class="max-w-5xl mx-auto w-full px-4 pt-6 space-y-6"
+      :style="{ color: textColor }"
+    >
 
-    <InAppBrowserInstructions
-      class="mt-2"
-      :browser-name="browserName"
-      :logo-url="logoUrl || undefined"
-      :team-name="teamName || undefined"
-      :text-color="textColor"
-      :background-color="backgroundColor"
-      :highlight-color="highlightColor"
-      :platform="primaryPlatform"
-      :error="status === 'error' ? message : undefined"
-    />
+      <InAppBrowserInstructions
+        class="mt-2"
+        :browser-name="browserName"
+        :logo-url="logoUrl || undefined"
+        :team-name="teamName || undefined"
+        :text-color="textColor"
+        :background-color="backgroundColor"
+        :highlight-color="highlightColor"
+        :platform="primaryPlatform"
+        :instruction-image="instructionImage || undefined"
+        :error="status === 'error' ? message : undefined"
+      />
 
-    <div class="max-w-3xl py-10">
-      <div
-        v-if="showDiagnostics && detectedLabels.length > 0"
-        class="mt-6 space-y-2 text-sm"
-        :style="{ color: textColor }"
-      >
-        <p class="font-semibold">
-          WebView diagnostics
-        </p>
-        <div class="grid grid-cols-1 gap-2">
-          <div
-            v-for="item in detectedLabels"
-            :key="item.label"
-            class="flex flex-col sm:flex-row sm:items-start sm:gap-2 border border-dashed rounded-lg p-3"
-            :style="{ borderColor: textColor }"
-          >
-            <span class="w-32 shrink-0 opacity-80">{{ item.label }}</span>
-            <span class="break-all">{{ item.value }}</span>
+      <div class="max-w-3xl py-10">
+        <div
+          v-if="showDiagnostics && detectedLabels.length > 0"
+          class="mt-6 space-y-2 text-sm"
+          :style="{ color: textColor }"
+        >
+          <p class="font-semibold">
+            WebView diagnostics
+          </p>
+          <div class="grid grid-cols-1 gap-2">
+            <div
+              v-for="item in detectedLabels"
+              :key="item.label"
+              class="flex flex-col sm:flex-row sm:items-start sm:gap-2 border border-dashed rounded-lg p-3"
+              :style="{ borderColor: textColor }"
+            >
+              <span class="w-32 shrink-0 opacity-80">{{ item.label }}</span>
+              <span class="break-all">{{ item.value }}</span>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="flex justify-center py-6">
+      <button
+        type="button"
+        class="group inline-flex items-center justify-center p-2 transition focus-visible:outline-offset-2 focus-visible:outline-gray-400 dark:hover:bg-gray-900"
+        aria-label="Toggle diagnostics"
+        @click="toggleDiagnostics"
+      >
+        <AppLogo
+          height="h-8"
+          class="w-auto transition group-hover:opacity-80"
+          :background-color="backgroundColor"
+        />
+      </button>
     </div>
   </div>
 </template>

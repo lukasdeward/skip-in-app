@@ -8,11 +8,15 @@ defineProps<{
   backgroundColor?: string | null
   highlightColor?: string | null
   platform: string
+  instructionImage?: string | null
 }>()
 </script>
 
 <template>
-  <div :style="{ color: textColor || undefined }">
+  <div
+    class="relative"
+    :style="{ color: textColor || undefined }"
+  >
     <UIcon
       name="i-typcn-arrow-back"
       class="absolute -top-2 right-2 h-20 w-20 -rotate-270"
@@ -30,6 +34,26 @@ defineProps<{
       <h2 class="text-2xl font-bold text-center mt-5">
         Open {{ teamName }} in {{ browserName }} to continue.
       </h2>
+    </div>
+
+    <div v-if="instructionImage" class="mt-8">
+      <p class="text-center text-sm opacity-80 mb-3">
+        Follow these steps to open in {{ browserName }} from {{ platform }}.
+      </p>
+      <div
+        class="overflow-hidden rounded-2xl border border-dashed shadow-sm"
+        :style="{
+          borderColor: highlightColor || '#f97316',
+          backgroundColor: backgroundColor || undefined
+        }"
+      >
+        <img
+          :src="instructionImage"
+          :alt="`${platform} in-app instructions`"
+          class="block w-full h-auto"
+          loading="lazy"
+        />
+      </div>
     </div>
   </div>
 </template>

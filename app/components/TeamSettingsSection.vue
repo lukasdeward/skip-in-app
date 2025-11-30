@@ -319,10 +319,10 @@ watch(() => props.teamId, () => {
                 placeholder="acme"
               />
               <p
-                v-if="errors?.slug?.[0]"
+                v-if="errors?.[0]"
                 class="text-xs text-red-500"
               >
-                {{ errors.slug[0] }}
+                {{ errors[0] }}
               </p>
             </div>
           </div>
