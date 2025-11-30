@@ -268,55 +268,41 @@ watch(() => props.teamId, () => {
             </div>
 
             <div class="grid gap-4 sm:grid-cols-3">
-              <UFormGroup
-                label="Background color"
-                name="backgroundColor"
-              >
-                <div class="flex items-center gap-3">
+                <div class="flex flex-col items-start gap-3">
+                  <p>Background color</p>
                   <UInput
                     v-model="settingsState.backgroundColor"
                     type="color"
-                    class="h-10 w-14 rounded-lg border bg-white"
                   />
                   <UInput
                     v-model="settingsState.backgroundColor"
                     placeholder="#020618"
                   />
                 </div>
-              </UFormGroup>
-                <UFormGroup
-                label="Text color"
-                name="textColor"
-              >
-                <div class="flex items-center gap-3">
+
+                <div class="flex flex-col items-start gap-3">
+                  <p>Text color</p>
                   <UInput
                     v-model="settingsState.textColor"
                     type="color"
-                    class="h-10 w-14 rounded-lg border bg-white"
                   />
                   <UInput
                     v-model="settingsState.textColor"
                     placeholder="#ffffff"
                   />
-                  {{ settingsState.backgroundColor ?? '#ffffff' }}
                 </div>
-              </UFormGroup>
-              <UFormGroup
-                label="Accent color"
-                name="highlightColor"
-              >
-                <div class="flex items-center gap-3">
+
+                <div class="flex flex-col items-start gap-3">
+                  <p>Accent color</p>
                   <UInput
                     v-model="settingsState.highlightColor"
                     type="color"
-                    class="h-10 w-14 rounded-lg border bg-white"
                   />
                   <UInput
                     v-model="settingsState.highlightColor"
                     placeholder="#f97316"
                   />
                 </div>
-              </UFormGroup>
             </div>
           </div>
         </UForm>

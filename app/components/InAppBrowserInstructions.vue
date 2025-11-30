@@ -1,6 +1,7 @@
 <script setup lang="ts">
 defineProps<{
   browserName: string
+  error?: string
   logoUrl?: string | null
   teamName?: string | null
   textColor?: string | null
@@ -28,7 +29,7 @@ defineProps<{
           >
         <div class="leading-tight">
           <p class="font-semibold">
-            {{ teamName || 'Team link' }}
+            {{ teamName }}
           </p>
         </div>
       </div>

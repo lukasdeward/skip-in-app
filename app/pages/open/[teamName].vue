@@ -196,7 +196,6 @@ const status = computed<'loading' | 'redirecting' | 'warning' | 'error'>(() => {
 const message = computed(() => {
   if (status.value === 'loading') return 'Looking up your Skip link...'
   if (status.value === 'redirecting') return 'Redirecting you to your destination...'
-  if (status.value === 'warning') return `Open ${teamName.value} in ${browserName.value} to continue.`
   const rawError = error.value
 
   if (rawError && typeof rawError === 'object') {
@@ -215,7 +214,6 @@ const message = computed(() => {
   return 'Unable to resolve this link.'
 })
 
-const targetUrl = computed(() => data.value?.targetUrl ?? null)
 const backgroundColor = computed(() => data.value?.backgroundColor?.trim() || defaultBackgroundColor)
 const textColor = computed(() => data.value?.textColor?.trim() || defaultTextColor)
 const highlightColor = computed(() => data.value?.highlightColor?.trim() || defaultHighlightColor)
@@ -262,33 +260,8 @@ const copyState = ref<'idle' | 'copied'>('idle')
 const copying = ref(false)
 let copyResetTimer: ReturnType<typeof setTimeout> | null = null
 
-const copyButtonLabel = computed(() => copyState.value === 'copied' ? 'Link copied' : 'Copy link')
-const logoUrl = computed(() => data.value?.logoUrl ?? null)
-const teamName = computed(() => data.value?.teamName ?? 'Team link')
-
-const copyLink = async () => {
-  if (!import.meta.client || !targetUrl.value) return
-  copying.value = true
-
-  try {
-    await copy(targetUrl.value)
-    copyState.value = 'copied'
-
-    if (copyResetTimer) {
-      clearTimeout(copyResetTimer)
-    }
-
-    copyResetTimer = setTimeout(() => {
-      copyState.value = 'idle'
-      copyResetTimer = null
-    }, 1800)
-  } catch (err: unknown) {
-    const description = err instanceof Error ? err.message : 'Please try again.'
-    toast.add({ title: 'Copy failed', description, color: 'error' })
-  } finally {
-    copying.value = false
-  }
-}
+const logoUrl = computed(() => data.value?.logoUrl)
+const teamName = computed(() => data.value?.teamName)
 
 useSeoMeta({
   title: data.value?.targetUrl ?? 'Redirecting...'
@@ -310,6 +283,7 @@ useSeoMeta({
       :background-color="backgroundColor"
       :highlight-color="highlightColor"
       :platform="primaryPlatform"
+      :error="status === 'error' ? message : undefined"
     />
 
     <div class="max-w-3xl py-10">
