@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { breakpointsTailwind } from '@vueuse/core'
+
 const user = useSupabaseUser()
 const toast = useToast()
 const router = useRouter()
@@ -20,6 +22,10 @@ type TeamSummary = {
 
 const fallbackBackgroundColor = '#020618'
 const fallbackTextColor = '#ffffff'
+
+const breakpoints = useBreakpoints(breakpointsTailwind)
+const isDesktop = breakpoints.greaterOrEqual('lg')
+const skeletonCardCount = computed(() => isDesktop.value ? 6 : 3)
 
 const {
   data: teams,
@@ -162,7 +168,7 @@ watch([teamsFetched, teams, () => user.value], () => {
           class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
         >
           <UCard
-            v-for="index in 3"
+            v-for="index in skeletonCardCount"
             :key="index"
             class="border border-dashed"
             :ui="{ body: 'flex items-center gap-4' }"

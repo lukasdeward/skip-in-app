@@ -82,34 +82,38 @@ watch(teamId, () => {
   <div class="space-y-10 max-w-7xl mx-auto">
     <div
       v-if="teamPending"
-      class="max-w-xl space-y-4"
+      class="w-full space-y-6"
     >
       <UCard>
-        <div class="flex items-center gap-4">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center">
           <USkeleton class="h-14 w-14 rounded-xl" />
-          <div class="flex-1 space-y-2">
-            <USkeleton class="h-4 w-[200px]" />
-            <USkeleton class="h-3 w-[120px]" />
+          <div class="flex-1 min-w-0 space-y-2">
+            <USkeleton class="h-4 w-40 sm:w-56" />
+            <USkeleton class="h-3 w-28 sm:w-36" />
           </div>
           <USkeleton class="h-9 w-32 rounded-lg" />
         </div>
       </UCard>
-      <div class="space-y-2">
-        <USkeleton class="h-4 w-[120px]" />
-        <div class="flex gap-2">
-          <USkeleton class="h-8 w-20 rounded-lg" />
-          <USkeleton class="h-8 w-20 rounded-lg" />
-          <USkeleton class="h-8 w-20 rounded-lg" />
-        </div>
-      </div>
-      <UCard>
+      <div class="px-4 space-y-4">
         <div class="space-y-3">
-          <USkeleton class="h-4 w-[180px]" />
-          <USkeleton class="h-10 w-full rounded-lg" />
-          <USkeleton class="h-10 w-full rounded-lg" />
-          <USkeleton class="h-10 w-full rounded-lg" />
+          <USkeleton class="h-4 w-28 sm:w-32" />
+          <div class="flex flex-wrap gap-2">
+            <USkeleton class="h-8 w-24 rounded-lg" />
+            <USkeleton class="h-8 w-24 rounded-lg" />
+            <USkeleton class="h-8 w-24 rounded-lg" />
+          </div>
         </div>
-      </UCard>
+        <UCard>
+          <div class="space-y-4">
+            <USkeleton class="h-4 w-48 sm:w-60" />
+            <div class="grid gap-3 md:grid-cols-2">
+              <USkeleton class="h-10 w-full rounded-lg" />
+              <USkeleton class="h-10 w-full rounded-lg" />
+              <USkeleton class="h-10 w-full rounded-lg md:col-span-2" />
+            </div>
+          </div>
+        </UCard>
+      </div>
     </div>
 
     <UAlert

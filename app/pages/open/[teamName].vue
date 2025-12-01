@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 import type { BrowserDetection } from '~~/composables/useBrowserRedirect'
 import { useBrowserRedirect } from '~~/composables/useBrowserRedirect'
+import instagramInstructions from '~/assets/instructions/instagram.png'
+import snapchatInstructions from '~/assets/instructions/snapchat.png'
+import tiktokInstructions from '~/assets/instructions/tiktok.png'
 
 definePageMeta({
   layout: 'open'
@@ -23,6 +26,14 @@ const requestBody = computed(() => ({ url: requestHref.value }))
 const defaultBackgroundColor = '#ffffff'
 const defaultTextColor = '#000000'
 const defaultHighlightColor = '#f97316'
+
+const instructionImages = {
+  tiktok: tiktokInstructions,
+  instagram: instagramInstructions,
+  snapchat: snapchatInstructions
+} as const
+
+type InstructionKey = keyof typeof instructionImages
 
 const { detectInAppBrowser, redirectToSystemBrowser } = useBrowserRedirect()
 
@@ -181,13 +192,13 @@ const instructionImage = computed(() => {
   if (!detected.value || !shouldShowWebViewWarning.value) return null
 
   const options = [
-    { active: detected.value.isTikTok, file: 'tiktok.png' },
-    { active: detected.value.isInstagram, file: 'instagram.png' },
-    { active: detected.value.isSnapchat, file: 'snapchat.png' }
-  ]
+    { active: detected.value.isTikTok, key: 'tiktok' },
+    { active: detected.value.isInstagram, key: 'instagram' },
+    { active: detected.value.isSnapchat, key: 'snapchat' }
+  ] as Array<{ active: boolean, key: InstructionKey }>
 
   const match = options.find(option => option.active)
-  return match ? `/instructions/${match.file}` : null
+  return match ? instructionImages[match.key] : null
 })
 
 const detectedLabels = computed(() => {
