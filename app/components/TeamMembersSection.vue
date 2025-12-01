@@ -1,9 +1,4 @@
 <script setup lang="ts">
-const props = defineProps<{
-  teamId: string
-  canManage: boolean
-}>()
-
 type TeamRole = 'OWNER' | 'ADMIN' | 'MEMBER'
 type TeamMember = {
   id: string
@@ -14,7 +9,18 @@ type TeamMember = {
   joinedAt: string
 }
 
+const props = withDefaults(defineProps<{
+  teamId: string
+  canManage: boolean
+  viewerRole?: TeamRole
+}>(), {
+  viewerRole: 'MEMBER'
+})
+
 const toast = useToast()
+const user = useSupabaseUser()
+const currentUserId = computed(() => user.value?.id || '')
+const viewerRole = computed<TeamRole>(() => props.viewerRole || 'MEMBER')
 
 const memberRoleOptions = [
   { label: 'Owner', value: 'OWNER' },
@@ -22,12 +28,20 @@ const memberRoleOptions = [
   { label: 'Member', value: 'MEMBER' }
 ]
 
+const inviteRoleOptions = computed(() => memberRoleOptions.filter(option => option.value !== 'OWNER'))
+const roleItemsForMember = (member: TeamMember) => {
+  if (member.role === 'OWNER') return memberRoleOptions
+  return memberRoleOptions.filter(option => option.value !== 'OWNER')
+}
+
 const members = ref<TeamMember[]>([])
 const membersPending = ref(false)
 const membersError = ref<any>(null)
 const membersLoaded = ref(false)
 const memberSaving = ref(false)
 const memberModalOpen = ref(false)
+const ownershipModalOpen = ref(false)
+const ownershipSaving = ref(false)
 
 const inviteState = reactive<{ email: string, role: TeamRole }>({
   email: '',
@@ -38,6 +52,12 @@ watch(memberModalOpen, (open) => {
   if (!open) {
     inviteState.email = ''
     inviteState.role = 'MEMBER'
+  }
+})
+
+watch(ownershipModalOpen, (open) => {
+  if (!open) {
+    ownershipSaving.value = false
   }
 })
 
@@ -62,9 +82,27 @@ const fetchMembers = async () => {
   }
 }
 
+const isSelf = (member: TeamMember) => member.customerId === currentUserId.value
+
+const canEditMemberRole = (member: TeamMember) => {
+  if (!props.canManage) return false
+  if (isSelf(member)) return false
+  if (member.role === 'OWNER' && viewerRole.value !== 'OWNER') return false
+  return true
+}
+
+const canTransferOwnership = (member: TeamMember) => viewerRole.value === 'OWNER' && canEditMemberRole(member) && member.role !== 'OWNER'
+
+const ownershipCandidates = computed(() => members.value.filter(member => !isSelf(member) && member.role !== 'OWNER'))
+
 const inviteMember = async () => {
   if (!props.teamId || !inviteState.email.trim()) {
     toast.add({ title: 'Email required', description: 'Add an email to invite a member.', color: 'warning' })
+    return
+  }
+
+  if (inviteState.role === 'OWNER' && viewerRole.value !== 'OWNER') {
+    toast.add({ title: 'Owners only', description: 'Only an owner can assign the owner role.', color: 'warning' })
     return
   }
 
@@ -82,7 +120,7 @@ const inviteMember = async () => {
     })
     if (error.value) throw error.value
 
-    toast.add({ title: 'Member added', color: 'success' })
+    toast.add({ title: 'Login link sent', description: 'We emailed a login link and added them to your team.', color: 'success' })
     inviteState.email = ''
     inviteState.role = 'MEMBER'
     memberModalOpen.value = false
@@ -98,6 +136,16 @@ const inviteMember = async () => {
 const updateMemberRole = async (member: TeamMember, role: TeamRole) => {
   if (!props.teamId || member.role === role) return
 
+  if (isSelf(member)) {
+    toast.add({ title: 'Not allowed', description: 'You cannot change your own role.', color: 'warning' })
+    return
+  }
+
+  if (role === 'OWNER' && viewerRole.value !== 'OWNER') {
+    toast.add({ title: 'Owners only', description: 'Only an owner can assign the owner role.', color: 'warning' })
+    return
+  }
+
   try {
     const { error } = await useFetch(`/api/teams/${props.teamId}/members/${member.id}`, {
       method: 'PATCH',
@@ -111,6 +159,21 @@ const updateMemberRole = async (member: TeamMember, role: TeamRole) => {
   } catch (error: any) {
     const message = error?.data?.message || error?.message || 'Unable to update role'
     toast.add({ title: 'Update failed', description: message, color: 'error' })
+  }
+}
+
+const transferOwnership = () => {
+  ownershipModalOpen.value = true
+}
+
+const confirmOwnershipTransfer = async (member: TeamMember) => {
+  ownershipSaving.value = true
+
+  try {
+    await updateMemberRole(member, 'OWNER')
+    ownershipModalOpen.value = false
+  } finally {
+    ownershipSaving.value = false
   }
 }
 
@@ -140,6 +203,7 @@ watch(() => props.teamId, () => {
   inviteState.email = ''
   inviteState.role = 'MEMBER'
   memberModalOpen.value = false
+  ownershipModalOpen.value = false
   if (props.teamId) {
     fetchMembers()
   }
@@ -154,7 +218,7 @@ watch(() => props.teamId, () => {
           Team members
         </p>
         <p class="text-muted text-sm">
-          Manage access and roles.
+          Manage access and roles. We send a login link before adding someone to your team.
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -213,25 +277,25 @@ watch(() => props.teamId, () => {
               {{ member.email }}
             </p>
             <p class="text-sm text-muted">
-              {{ member.name || 'No name' }} · Joined {{ new Date(member.joinedAt).toLocaleDateString() }}
+              {{ member.name || 'No name' }} · Joined {{ new Date(member.joinedAt).toLocaleDateString() }}<span v-if="isSelf(member)"> · You</span>
             </p>
           </div>
           <div class="flex items-center gap-2 self-end">
             <USelectMenu
-              v-if="canManage"
+              v-if="member.role != 'OWNER' && canEditMemberRole(member)"
               :model-value="member.role"
-              :options="memberRoleOptions"
-              value-attribute="value"
-              option-attribute="label"
+              :items="roleItemsForMember(member)"
               @update:model-value="role => updateMemberRole(member, role as TeamRole)"
             />
-            <UBadge
+            <UButton
               v-else
+              size="xs"
               color="neutral"
-              variant="subtle"
+              variant="soft"
+              @click="transferOwnership"
             >
-              {{ member.role.toLowerCase() }}
-            </UBadge>
+              Transfer ownership
+            </UButton>
             <UButton
               icon="i-lucide-trash-2"
               color="error"
@@ -281,18 +345,19 @@ watch(() => props.teamId, () => {
                   v-model="inviteState.email"
                   placeholder="member@example.com"
                 />
+                <p class="text-xs text-muted mt-1">
+                  They will receive a login link before being added to this team.
+                </p>
               </UFormGroup>
               <UFormGroup
                 label="Role"
-                name="role"
-              >
-                <USelectMenu
-                  v-model="inviteState.role"
-                  :options="memberRoleOptions"
-                  value-attribute="value"
-                  option-attribute="label"
-                />
-              </UFormGroup>
+              name="role"
+            >
+              <USelectMenu
+                v-model="inviteState.role"
+                :items="inviteRoleOptions"
+              />
+            </UFormGroup>
               <div class="flex justify-end gap-2">
                 <UButton
                   color="neutral"
@@ -310,6 +375,64 @@ watch(() => props.teamId, () => {
                 </UButton>
               </div>
             </UForm>
+          </div>
+        </UCard>
+      </template>
+    </UModal>
+
+    <UModal v-model:open="ownershipModalOpen">
+      <template #content="{ close }">
+        <UCard>
+          <template #header>
+            <div class="flex items-center justify-between">
+              <p class="font-semibold">
+                Transfer ownership
+              </p>
+            </div>
+          </template>
+
+          <div class="space-y-3">
+            <p class="text-sm text-muted">
+              Choose a member to promote to owner. They will gain full control of this team.
+            </p>
+
+            <div v-if="ownershipCandidates.length === 0" class="text-sm text-muted">
+              No eligible members to transfer ownership to.
+            </div>
+            <div v-else class="space-y-3">
+              <div
+                v-for="candidate in ownershipCandidates"
+                :key="candidate.id"
+                class="flex items-center justify-between gap-3 border border-dashed rounded-xl p-3"
+              >
+                <div class="space-y-1">
+                  <p class="font-semibold break-all">
+                    {{ candidate.email }}
+                  </p>
+                  <p class="text-sm text-muted">
+                    {{ candidate.name || 'No name' }} · Joined {{ new Date(candidate.joinedAt).toLocaleDateString() }}
+                  </p>
+                </div>
+                <UButton
+                  color="neutral"
+                  size="xs"
+                  :loading="ownershipSaving"
+                  @click="confirmOwnershipTransfer(candidate)"
+                >
+                  Make owner
+                </UButton>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-2">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                @click="close"
+              >
+                Cancel
+              </UButton>
+            </div>
           </div>
         </UCard>
       </template>

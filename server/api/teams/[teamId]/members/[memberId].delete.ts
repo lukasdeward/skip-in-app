@@ -38,7 +38,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (member.role === TeamRole.OWNER && membership.role !== TeamRole.OWNER) {
-      throw createError({ statusCode: 403, message: 'Only an owner can remove another owner' })
+      throw createError({ statusCode: 403, message: 'You are not allowed to remove an owner' })
     }
 
     if (member.role === TeamRole.OWNER) {

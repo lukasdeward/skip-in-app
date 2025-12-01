@@ -46,11 +46,21 @@ export default defineEventHandler(async (event) => {
       throw createError({ statusCode: 400, message: 'A valid role is required' })
     }
 
+    if (member.customerId === customerId) {
+      throw createError({ statusCode: 403, message: 'You cannot change your own role' })
+    }
+
     if (member.role === TeamRole.OWNER && membership.role !== TeamRole.OWNER) {
       throw createError({ statusCode: 403, message: 'Only an owner can change owner roles' })
     }
 
-    if (requestedRole !== TeamRole.OWNER) {
+    if (requestedRole === TeamRole.OWNER && membership.role !== TeamRole.OWNER) {
+      throw createError({ statusCode: 403, message: 'Only an owner can assign the owner role' })
+    }
+
+    const isOwnershipTransfer = requestedRole === TeamRole.OWNER && membership.role === TeamRole.OWNER && member.customerId !== customerId
+
+    if (!isOwnershipTransfer && requestedRole !== TeamRole.OWNER) {
       const ownerCount = await prisma.teamMember.count({
         where: { teamId, role: TeamRole.OWNER }
       })
@@ -60,11 +70,28 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const updated = await prisma.teamMember.update({
-      where: { id: memberId },
-      data: { role: requestedRole },
-      include: { customer: true }
-    })
+    let updated
+
+    if (isOwnershipTransfer) {
+      await prisma.$transaction(async (tx) => {
+        updated = await tx.teamMember.update({
+          where: { id: memberId },
+          data: { role: TeamRole.OWNER },
+          include: { customer: true }
+        })
+
+        await tx.teamMember.update({
+          where: { id: membership.id },
+          data: { role: TeamRole.ADMIN }
+        })
+      })
+    } else {
+      updated = await prisma.teamMember.update({
+        where: { id: memberId },
+        data: { role: requestedRole },
+        include: { customer: true }
+      })
+    }
 
     return {
       id: updated.id,

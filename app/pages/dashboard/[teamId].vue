@@ -189,6 +189,7 @@ watch(teamId, () => {
           <TeamMembersSection
             :team-id="team.id"
             :can-manage="canManageMembers"
+            :viewer-role="team.role"
           />
         </div>
 
