@@ -182,11 +182,12 @@ watch([teamsFetched, teams, () => user.value], () => {
                   v-if="team.logoUrl"
                   class="sr-only"
                 >{{ team.name }}</span>
-                <NuxtImg
+                <img
                   v-if="team.logoUrl"
                   :src="team.logoUrl"
                   alt=""
                   class="h-10 w-10 object-contain"
+                  loading="lazy"
                 />
                 <span v-else>{{ team.name.slice(0, 2).toUpperCase() }}</span>
               </div>
