@@ -44,6 +44,25 @@ const {
   key: () => `open-link-${requestHref.value}`
 })
 
+const ensureUtmSourceSkipsocial = (rawUrl?: string | null) => {
+  const trimmed = rawUrl?.trim()
+  if (!trimmed) return ''
+
+  try {
+    const url = new URL(trimmed)
+    url.searchParams.set('utm_source', 'skipsocial')
+    return url.toString()
+  } catch {
+    const hasParam = /[?&]utm_source=/i.test(trimmed)
+    const cleaned = hasParam ? trimmed.replace(/([?&]utm_source=)[^&#]*/i, '$1skipsocial') : trimmed
+    if (hasParam) return cleaned
+    const separator = cleaned.includes('?') ? '&' : '?'
+    return `${cleaned}${separator}utm_source=skipsocial`
+  }
+}
+
+const redirectTargetUrl = computed(() => ensureUtmSourceSkipsocial(data.value?.targetUrl))
+
 const isLocalhost = computed(() => {
   if (!import.meta.client) return false
   const host = window.location.hostname
@@ -53,14 +72,14 @@ const isLocalhost = computed(() => {
 const attemptRedirect = async (force = false) => {
   // Never auto-redirect when debugging locally to keep the interstitial visible.
   if (!force && isLocalhost.value) return
-  if (!data.value?.targetUrl) return
+  if (!redirectTargetUrl.value) return
 
   if (detected.value?.isWebView) {
-    redirectToSystemBrowser(data.value.targetUrl, detected.value)
+    redirectToSystemBrowser(redirectTargetUrl.value, detected.value)
     return
   }
 
-  await navigateTo(data.value.targetUrl, { external: true, replace: true })
+  await navigateTo(redirectTargetUrl.value, { external: true, replace: true })
 }
 
 onMounted(() => {
@@ -72,8 +91,8 @@ onMounted(() => {
     browserName.value = info.isIOS ? 'Safari' : 'Chrome'
     shouldShowWebViewWarning.value = true
 
-    if (!isLocalhost.value && data.value?.targetUrl) {
-      redirectToSystemBrowser(data.value.targetUrl, info)
+    if (!isLocalhost.value && redirectTargetUrl.value) {
+      redirectToSystemBrowser(redirectTargetUrl.value, info)
     }
   } else {
     attemptRedirect()
@@ -189,7 +208,7 @@ const logoUrl = computed(() => data.value?.logoUrl)
 const teamName = computed(() => data.value?.teamName)
 
 useSeoMeta({
-  title: data.value?.targetUrl ?? 'Redirecting...'
+  title: redirectTargetUrl.value || data.value?.targetUrl || 'Redirecting...'
 })
 </script>
 
