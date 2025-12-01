@@ -19,7 +19,7 @@ const props = withDefaults(defineProps<{
 
 const toast = useToast()
 const user = useSupabaseUser()
-const currentUserId = computed(() => user.value?.id || '')
+const currentUserId = computed(() => user.value?.sub || '')
 const viewerRole = computed<TeamRole>(() => props.viewerRole || 'MEMBER')
 
 const memberRoleOptions = [
@@ -162,7 +162,7 @@ const updateMemberRole = async (member: TeamMember, role: TeamRole) => {
   }
 }
 
-const showTransferOwnership = (member: TeamMember) => isSelf(member) && viewerRole.value === 'OWNER'
+const showTransferOwnership = (member: TeamMember) => isSelf(member) && viewerRole.value === 'OWNER' && member.role === 'OWNER'
 
 const transferOwnership = () => {
   ownershipModalOpen.value = true
