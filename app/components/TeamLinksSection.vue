@@ -69,13 +69,15 @@ const fetchLinks = async () => {
     if (error.value) throw error.value
     links.value = data.value || []
     linksLoaded.value = true
-    await maybeAutoCreateLink()
   } catch (error: any) {
     linksError.value = error
     links.value = []
+    linksLoaded.value = false
   } finally {
     linksPending.value = false
   }
+
+  await maybeAutoCreateLink()
 }
 
 const onCreateLink = async (payload: FormSubmitEvent<LinkForm>) => {

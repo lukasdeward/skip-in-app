@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const user = useSupabaseUser()
 const toast = useToast()
+const router = useRouter()
 
 useSeoMeta({
   title: 'Dashboard',
@@ -51,25 +52,32 @@ const extractDomainName = (input: string) => {
   const match = input.trim().match(/^(?:https?:\/\/)?(?:www\.)?([^\/:]+)/i)
   const host = match?.[1] || input.trim()
   const base = host.split('.')[0] || host
-  return base ? `${base.charAt(0).toUpperCase()}${base.slice(1)}` : host
+  const cleaned = base.replace(/[^a-zA-Z0-9]/g, '')
+  if (!cleaned) return 'Team'
+  return `${cleaned.charAt(0).toUpperCase()}${cleaned.slice(1)}`
 }
 
-const createTeam = async (overrideName?: string) => {
+const createTeam = async (overrideName?: string, options: { silent?: boolean } = {}): Promise<TeamSummary | null> => {
+  const { silent = false } = options
   const name = (overrideName ?? newTeamName.value).trim()
 
   if (!name) {
-    toast.add({ title: 'Team name required', description: 'Add a name to create your team.', color: 'warning' })
-    return
+    if (!silent) {
+      toast.add({ title: 'Team name required', description: 'Add a name to create your team.', color: 'warning' })
+    }
+    return null
   }
   if (name.includes('-')) {
-    toast.add({ title: 'Invalid name', description: 'Team name cannot include dashes.', color: 'warning' })
-    return
+    if (!silent) {
+      toast.add({ title: 'Invalid name', description: 'Team name cannot include dashes.', color: 'warning' })
+    }
+    return null
   }
 
   creatingTeam.value = true
 
   try {
-    const { error } = await useFetch('/api/teams', {
+    const { data, error } = await useFetch<TeamSummary>('/api/teams', {
       method: 'POST',
       body: { name },
       server: false,
@@ -77,18 +85,25 @@ const createTeam = async (overrideName?: string) => {
     })
     if (error.value) throw error.value
 
-    toast.add({ title: 'Team created', description: `${name} is ready.`, color: 'success' })
+    if (!silent) {
+      toast.add({ title: 'Team created', description: `${name} is ready.`, color: 'success' })
+    }
     newTeamName.value = ''
-    loadTeams()
+    await loadTeams()
+    return data.value || null
   } catch (error: any) {
-    const message = error?.data?.message || error?.message || 'Unable to create team'
-    toast.add({ title: 'Creation failed', description: message, color: 'error' })
+    if (!silent) {
+      const message = error?.data?.message || error?.message || 'Unable to create team'
+      toast.add({ title: 'Creation failed', description: message, color: 'error' })
+    }
+    return null
   } finally {
     creatingTeam.value = false
   }
 }
 
 const tryAutoCreateTeam = async () => {
+  if (!import.meta.client) return
   if (autoTeamCreated.value) return
   if (!teamsFetched.value || teamsPending.value || teamsError.value) return
   if (!teams.value || teams.value.length > 0) return
@@ -102,7 +117,10 @@ const tryAutoCreateTeam = async () => {
   newTeamName.value = parsedName
 
   try {
-    await createTeam(parsedName)
+    const created = await createTeam(parsedName, { silent: true })
+    if (created?.id) {
+      await router.push(`/dashboard/${created.id}`)
+    }
   } catch (error) {
     console.error('[dashboard] Auto team creation failed', error)
   }
