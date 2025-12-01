@@ -1,3 +1,5 @@
+import { useAuthRedirect } from "~~/composables/useAuthRedirect"
+
 export default defineNuxtRouteMiddleware((to) => {
   const legalPaths = ['/imprint', '/data-protection', '/terms-of-service']
   const isLegalRoute = legalPaths.some(path => to.path.startsWith(path))
@@ -6,11 +8,19 @@ export default defineNuxtRouteMiddleware((to) => {
   const isOpenRoute = to.path.startsWith('/open/')
   const isDashboardRoute = to.path.startsWith('/dashboard')
   const session = useSupabaseSession()
+  const { redirectPath } = useAuthRedirect()
 
   const handleRedirect = () => {
-    if (isLegalRoute || isOpenRoute || isAuthRoute) return
-
     const isAuthenticated = !!session.value
+
+    if (isLegalRoute || isOpenRoute) return
+
+    if (isAuthRoute) {
+      if (isAuthenticated) {
+        return navigateTo(redirectPath.value)
+      }
+      return
+    }
 
     if (isDashboardRoute && !isAuthenticated) {
       return navigateTo('/login')
