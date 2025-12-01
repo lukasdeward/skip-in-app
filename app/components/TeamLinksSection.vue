@@ -34,6 +34,7 @@ const linksPending = ref(false)
 const linksError = ref<any>(null)
 const linksLoaded = ref(false)
 const creatingLink = ref(false)
+const autoLinkAttempted = ref(false)
 const editingLinkId = ref<string | null>(null)
 const editingTargetUrl = ref('')
 const savingLinkId = ref<string | null>(null)
@@ -68,6 +69,7 @@ const fetchLinks = async () => {
     if (error.value) throw error.value
     links.value = data.value || []
     linksLoaded.value = true
+    await maybeAutoCreateLink()
   } catch (error: any) {
     linksError.value = error
     links.value = []
@@ -77,32 +79,10 @@ const fetchLinks = async () => {
 }
 
 const onCreateLink = async (payload: FormSubmitEvent<LinkForm>) => {
-  if (!props.teamId) return
-
-  creatingLink.value = true
-
-  try {
-    const body = {
-      targetUrl: payload.data.targetUrl.trim()
-    }
-
-    const { error } = await useFetch(`/api/teams/${props.teamId}/links`, {
-      method: 'POST',
-      body,
-      server: false,
-      key: `create-link-${props.teamId}-${Date.now()}`
-    })
-    if (error.value) throw error.value
-    toast.add({ title: 'Link created', color: 'success' })
-
+  const created = await createLinkFromUrl(payload.data.targetUrl, { trackState: true })
+  if (created) {
     resetLinkForm()
-    await fetchLinks()
     linkModalOpen.value = false
-  } catch (error: any) {
-    const message = error?.data?.message || error?.message || 'Unable to save link'
-    toast.add({ title: 'Save failed', description: message, color: 'error' })
-  } finally {
-    creatingLink.value = false
   }
 }
 
@@ -171,9 +151,88 @@ const openNewLinkModal = () => {
   linkModalOpen.value = true
 }
 
+const createLinkFromUrl = async (
+  targetUrl: string,
+  options: { silent?: boolean, trackState?: boolean } = {}
+) => {
+  if (!props.teamId) return false
+
+  const { silent = false, trackState = false } = options
+  const parsed = linkSchema.safeParse({ targetUrl })
+
+  if (!parsed.success) {
+    if (!silent) {
+      const message = parsed.error.errors?.[0]?.message || 'Enter a valid URL'
+      toast.add({ title: 'Invalid URL', description: message, color: 'error' })
+    }
+    return false
+  }
+
+  if (trackState) {
+    creatingLink.value = true
+  }
+
+  try {
+    const { error } = await useFetch(`/api/teams/${props.teamId}/links`, {
+      method: 'POST',
+      body: { targetUrl: parsed.data.targetUrl.trim() },
+      server: false,
+      key: `create-link-${props.teamId}-${Date.now()}`
+    })
+    if (error.value) throw error.value
+
+    if (!silent) {
+      toast.add({ title: 'Link created', color: 'success' })
+    }
+
+    await fetchLinks()
+    return true
+  } catch (error: any) {
+    if (!silent) {
+      const message = error?.data?.message || error?.message || 'Unable to save link'
+      toast.add({ title: 'Save failed', description: message, color: 'error' })
+    }
+    return false
+  } finally {
+    if (trackState) {
+      creatingLink.value = false
+    }
+  }
+}
+
+const maybeAutoCreateLink = async () => {
+  if (!import.meta.client) return
+  if (autoLinkAttempted.value) return
+  if (!props.canManage) return
+  if (linksPending.value || !linksLoaded.value) return
+  if (links.value.length > 0) {
+    autoLinkAttempted.value = true
+    return
+  }
+
+  const stored = localStorage.getItem('landing:last-url')?.trim()
+  if (!stored) {
+    autoLinkAttempted.value = true
+    return
+  }
+
+  autoLinkAttempted.value = true
+  const created = await createLinkFromUrl(stored, { silent: true })
+
+  if (created) {
+    try {
+      localStorage.removeItem('landing:last-url')
+    } catch (error) {
+      console.error('[team-links] Failed to clear landing:last-url', error)
+    }
+    toast.add({ title: 'Link created', description: 'We added your last landing URL to this team.', color: 'success' })
+  }
+}
+
 watch(() => props.teamId, () => {
   links.value = []
   linksLoaded.value = false
+  autoLinkAttempted.value = false
   resetLinkForm()
   resetInlineEdit()
   linkModalOpen.value = false
@@ -325,7 +384,7 @@ const copySkipUrl = async (link: TeamLink) => {
                 class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
                 @submit.prevent="saveInlineEdit(link)"
               >
-                <div class="flex flex-1 flex-wrap items-center gap-2">
+                <div class="flex flex-1 flex-wrap items-center gap-2 w-full">
                   <a
                     :href="formatSkipUrlHref(link)"
                     target="_blank"
@@ -336,7 +395,7 @@ const copySkipUrl = async (link: TeamLink) => {
                     {{ formatSkipUrlText(link) }}
                   </a>
                   <UButton
-                    size="2xs"
+                    size="xs"
                     color="neutral"
                     variant="ghost"
                     icon="i-lucide-copy"
