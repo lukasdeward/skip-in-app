@@ -141,12 +141,21 @@ watch([teamsFetched, teams, () => user.value], () => {
 
         <div
           v-if="teamsPending"
-          class="w-full text-4xl flex justify-center"
+          class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
         >
-          <UIcon
-            name="i-lucide-loader-2"
-            class="animate-spin inline-block mr-2"
-          />
+          <UCard
+            v-for="index in 3"
+            :key="index"
+            class="border border-dashed"
+            :ui="{ body: 'flex items-center gap-4' }"
+          >
+            <USkeleton class="h-12 w-12 rounded-xl" />
+            <div class="flex-1 space-y-2">
+              <USkeleton class="h-4 w-[160px]" />
+              <USkeleton class="h-3 w-[120px]" />
+              <USkeleton class="h-8 w-28 rounded-lg" />
+            </div>
+          </UCard>
         </div>
 
         <div

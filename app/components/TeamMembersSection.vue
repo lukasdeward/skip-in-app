@@ -162,6 +162,8 @@ const updateMemberRole = async (member: TeamMember, role: TeamRole) => {
   }
 }
 
+const showTransferOwnership = (member: TeamMember) => isSelf(member) && viewerRole.value === 'OWNER'
+
 const transferOwnership = () => {
   ownershipModalOpen.value = true
 }
@@ -288,7 +290,7 @@ watch(() => props.teamId, () => {
               @update:model-value="role => updateMemberRole(member, role as TeamRole)"
             />
             <UButton
-              v-else
+              v-else-if="showTransferOwnership(member)"
               size="xs"
               color="neutral"
               variant="soft"
@@ -296,6 +298,13 @@ watch(() => props.teamId, () => {
             >
               Transfer ownership
             </UButton>
+            <UBadge
+              v-else
+              color="neutral"
+              variant="subtle"
+            >
+              {{ member.role.toLowerCase() }}
+            </UBadge>
             <UButton
               icon="i-lucide-trash-2"
               color="error"

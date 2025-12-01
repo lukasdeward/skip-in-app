@@ -80,16 +80,37 @@ watch(teamId, () => {
 
 <template>
   <div class="space-y-10 max-w-7xl mx-auto">
-    <UCard
+    <div
       v-if="teamPending"
-      class="flex justify-center gap-3 text-muted"
+      class="max-w-xl space-y-4"
     >
-      <UIcon
-        name="i-lucide-loader-2"
-        class="animate-spin"
-      />
-      Loading team...
-    </UCard>
+      <UCard>
+        <div class="flex items-center gap-4">
+          <USkeleton class="h-14 w-14 rounded-xl" />
+          <div class="flex-1 space-y-2">
+            <USkeleton class="h-4 w-[200px]" />
+            <USkeleton class="h-3 w-[120px]" />
+          </div>
+          <USkeleton class="h-9 w-32 rounded-lg" />
+        </div>
+      </UCard>
+      <div class="space-y-2">
+        <USkeleton class="h-4 w-[120px]" />
+        <div class="flex gap-2">
+          <USkeleton class="h-8 w-20 rounded-lg" />
+          <USkeleton class="h-8 w-20 rounded-lg" />
+          <USkeleton class="h-8 w-20 rounded-lg" />
+        </div>
+      </div>
+      <UCard>
+        <div class="space-y-3">
+          <USkeleton class="h-4 w-[180px]" />
+          <USkeleton class="h-10 w-full rounded-lg" />
+          <USkeleton class="h-10 w-full rounded-lg" />
+          <USkeleton class="h-10 w-full rounded-lg" />
+        </div>
+      </UCard>
+    </div>
 
     <UAlert
       v-else-if="isTeamNotFound"
