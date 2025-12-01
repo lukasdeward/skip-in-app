@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useAuthRedirect } from '~~/composables/useAuthRedirect'
+
 definePageMeta({
   layout: 'auth'
 })
@@ -11,16 +13,11 @@ type OtpType = 'signup' | 'magiclink' | 'recovery' | 'invite' | 'email_change'
 
 const supabase = useSupabaseClient()
 const route = useRoute()
+const { redirectPath } = useAuthRedirect()
 
 const status = ref<'verifying' | 'success' | 'error'>('verifying')
 const errorMessage = ref('')
-
-const redirectTarget = computed(() => {
-  const query = route.query
-  return (query.redirect as string)
-    || (query.redirect_to as string)
-    || '/dashboard'
-})
+const redirectTarget = redirectPath
 
 const verify = async () => {
   if (!import.meta.client) return

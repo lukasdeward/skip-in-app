@@ -1,18 +1,22 @@
 export default defineNuxtRouteMiddleware((to) => {
   const legalPaths = ['/imprint', '/data-protection', '/terms-of-service']
   const isLegalRoute = legalPaths.some(path => to.path.startsWith(path))
+  const authPaths = ['/login', '/signup', '/confirm']
+  const isAuthRoute = authPaths.some(path => to.path.startsWith(path))
   const isOpenRoute = to.path.startsWith('/open/')
   const isDashboardRoute = to.path.startsWith('/dashboard')
-  const user = useSupabaseUser()
+  const session = useSupabaseSession()
 
   const handleRedirect = () => {
-    if (isLegalRoute || isOpenRoute) return
+    if (isLegalRoute || isOpenRoute || isAuthRoute) return
 
-    if (isDashboardRoute && !user.value) {
+    const isAuthenticated = !!session.value
+
+    if (isDashboardRoute && !isAuthenticated) {
       return navigateTo('/login')
     }
 
-    if (!isDashboardRoute && user.value) {
+    if (!isDashboardRoute && isAuthenticated) {
       return navigateTo('/dashboard')
     }
   }
@@ -20,7 +24,7 @@ export default defineNuxtRouteMiddleware((to) => {
   const result = handleRedirect()
 
   if (import.meta.client) {
-    watch(() => user.value, () => {
+    watch(() => session.value, () => {
       handleRedirect()
     })
   }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import { useAuthRedirect } from '~~/composables/useAuthRedirect'
 
 const props = withDefaults(defineProps<{
   redirectOnSuccess?: boolean
@@ -16,8 +17,7 @@ const toast = useToast()
 const supabase = useSupabaseClient()
 const router = useRouter()
 const loading = ref(false)
-const requestURL = useRequestURL()
-const redirectTo = computed(() => import.meta.client ? `${window.location.origin}/dashboard` : `${requestURL.origin}/dashboard`)
+const { redirectUrl } = useAuthRedirect()
 const linkSent = ref(false)
 const lastEmail = ref('')
 
@@ -45,7 +45,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
   const { error } = await supabase.auth.signInWithOtp({
     email: payload.data.email,
     options: {
-      emailRedirectTo: redirectTo.value
+      emailRedirectTo: redirectUrl.value
     }
   })
 
@@ -74,7 +74,7 @@ async function signUpWithProvider(provider: 'google' | 'github') {
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: window.location.origin
+      redirectTo: redirectUrl.value
     }
   })
 
