@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+import type { BrowserDetection } from '~~/composables/useBrowserRedirect'
+import { useBrowserRedirect } from '~~/composables/useBrowserRedirect'
+
 definePageMeta({
   layout: 'open'
 })
@@ -21,91 +24,11 @@ const defaultBackgroundColor = '#ffffff'
 const defaultTextColor = '#000000'
 const defaultHighlightColor = '#f97316'
 
+const { detectInAppBrowser, redirectToSystemBrowser } = useBrowserRedirect()
+
 const shouldShowWebViewWarning = ref(false)
 const browserName = ref('Safari')
-const detected = ref<null | {
-  isWebView: boolean
-  isIOS: boolean
-  isAndroid: boolean
-  isSafari: boolean
-  isTikTok: boolean
-  isInstagram: boolean
-  isFacebook: boolean
-  isMessenger: boolean
-  isTwitter: boolean
-  isWeChat: boolean
-  isLine: boolean
-  isSnapchat: boolean
-  userAgent: string
-  brands: string[]
-}>(null)
-
-const detectWebView = () => {
-  const userAgent = window.navigator.userAgent || window.navigator.vendor || ''
-  const navigatorWithUAData = window.navigator as Navigator & { userAgentData?: { brands?: Array<{ brand: string }> } }
-  const brands = (navigatorWithUAData.userAgentData?.brands || []).map(({ brand }) => brand)
-  const isIOS = /iphone|ipod|ipad/i.test(userAgent)
-  const isAndroid = /android/i.test(userAgent)
-  const standalone = 'standalone' in window.navigator && window.navigator.standalone
-  const isSafari = /safari/i.test(userAgent) && !/crios|fxios|edgios/i.test(userAgent)
-
-  const isTikTok = /(tiktok|ttwebview|bytedancewebview|aweme|musical_ly)/i.test(userAgent)
-    || brands.some((brand: string) => /tiktok|bytedance/i.test(brand))
-    || /tiktok\.com/i.test(document.referrer || '')
-
-  const isInstagram = /Instagram/i.test(userAgent)
-  const isFacebook = /FBAN|FBAV|Facebook/i.test(userAgent)
-  const isMessenger = /FB_IAB|Messenger/i.test(userAgent)
-  const isTwitter = /Twitter|XiaoMiBrowser|X\/[\d.]+/i.test(userAgent) || /X\s?app/i.test(userAgent)
-  const isWeChat = /MicroMessenger|WeChat/i.test(userAgent)
-  const isLine = /Line/i.test(userAgent)
-  const isSnapchat = /Snapchat/i.test(userAgent)
-
-  const androidWebView = isAndroid
-    && (/\bwv\b/i.test(userAgent)
-      || (/version\/\d+\.\d+/i.test(userAgent) && !/chrome|samsungbrowser|firefox/i.test(userAgent))
-      || isTikTok)
-
-  const iosWebView = isIOS && !standalone && (
-    !isSafari
-    || isTikTok
-    || isInstagram
-    || isFacebook
-    || isMessenger
-    || isTwitter
-    || isWeChat
-    || isLine
-    || isSnapchat
-  )
-
-  const inAppBrowser = isInstagram
-    || isFacebook
-    || isMessenger
-    || isWeChat
-    || isLine
-    || isSnapchat
-    || isTwitter
-    || isTikTok
-
-  const isWebView = isTikTok || androidWebView || iosWebView || inAppBrowser
-
-  return {
-    isWebView,
-    isIOS,
-    isAndroid,
-    isSafari,
-    isTikTok,
-    isInstagram,
-    isFacebook,
-    isMessenger,
-    isTwitter,
-    isWeChat,
-    isLine,
-    isSnapchat,
-    userAgent,
-    brands
-  }
-}
+const detected = ref<BrowserDetection | null>(null)
 
 const {
   data,
@@ -130,20 +53,28 @@ const isLocalhost = computed(() => {
 const attemptRedirect = async (force = false) => {
   // Never auto-redirect when debugging locally to keep the interstitial visible.
   if (!force && isLocalhost.value) return
-  if (!force && shouldShowWebViewWarning.value) return
-  if (data.value?.targetUrl) {
-    await navigateTo(data.value.targetUrl, { external: true, replace: true })
+  if (!data.value?.targetUrl) return
+
+  if (detected.value?.isWebView) {
+    redirectToSystemBrowser(data.value.targetUrl, detected.value)
+    return
   }
+
+  await navigateTo(data.value.targetUrl, { external: true, replace: true })
 }
 
 onMounted(() => {
-  const info = detectWebView()
+  const info = detectInAppBrowser()
   detected.value = info
   showDiagnostics.value = false
 
   if (info.isWebView) {
     browserName.value = info.isIOS ? 'Safari' : 'Chrome'
     shouldShowWebViewWarning.value = true
+
+    if (!isLocalhost.value && data.value?.targetUrl) {
+      redirectToSystemBrowser(data.value.targetUrl, info)
+    }
   } else {
     attemptRedirect()
   }

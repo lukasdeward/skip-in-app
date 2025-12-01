@@ -227,7 +227,7 @@ const maybeAutoCreateLink = async () => {
     } catch (error) {
       console.error('[team-links] Failed to clear landing:last-url', error)
     }
-    toast.add({ title: 'Link created', description: 'We added your last landing URL to this team.', color: 'success' })
+    toast.add({ title: 'Link created', description: 'We added your URL.', color: 'success' })
   }
 }
 
