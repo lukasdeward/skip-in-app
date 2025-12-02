@@ -1,82 +1,52 @@
-title: A plan for every need
-description: Our plans are designed to meet the requirements of both beginners and players. Get the right plan that suits you.
+title: Simple pricing for teams
+description: Start free with 10,000 tracked clicks or upgrade to Pro for unlimited volume.
 seo:
   title: Pricing
-  description: Choose the plan that's right for you.
+  description: Free up to 10,000 clicks. Pro is 19 EUR/month or 190 EUR/year for unlimited.
 navigation.icon: i-lucide-credit-card
 plans:
-  - title: Basic
-    description: A basic plan for individuals.
+  - title: Free
+    description: Up to 10,000 link clicks per team.
     price:
-      month: $9.9
-      year: $99.9
+      month: €0
+      year: €0
     button:
-      label: Get Started
+      label: Get started
       color: neutral
       variant: subtle
     features:
-      - 1 GB Storage
-      - 1 Email Account
-      - 1 Domain
-      - 1 Website
-      - 1 Database
-      - 1 SSL Certificate
-      - 1 Support Ticket
-  - title: Standard
-    description: A standard plan for small teams.
+      - 10,000 tracked link clicks per month
+      - Unlimited links
+      - Team members included
+      - Click analytics
+      - Email support
+  - title: Pro
+    description: Unlimited link clicks for growing teams.
     price:
-      month: $19.9
-      year: $199.9
+      month: €19
+      year: €190
     highlight: true
     scale: true
     button:
-      label: Get Started
+      label: Upgrade to Pro
     features:
-      - 10 GB Storage
-      - 10 Email Accounts
-      - 10 Domains
-      - 10 Websites
-      - 10 Databases
-      - 10 SSL Certificates
-      - 10 Support Tickets
-  - title: Premium
-    description: A premium plan for large teams.
-    price:
-      month: $29.9
-      year: $299.9
-    button:
-      label: Get Started
-      color: neutral
-      variant: subtle
-    features:
-      - 100 GB Storage
-      - 100 Email Accounts
-      - 100 Domains
-      - 100 Websites
-      - 100 Databases
-      - 100 SSL Certificates
-      - 100 Support Tickets
-logos:
-  title: Trusted by the world's best
-  icons:
-    - i-simple-icons-amazonaws
-    - i-simple-icons-heroku
-    - i-simple-icons-netlify
-    - i-simple-icons-vercel
-    - i-simple-icons-cloudflare
+      - Unlimited link clicks
+      - Priority support
+      - Billing per team
+      - Works for all links and destinations
 faq:
   title: Frequently asked questions
-  description: Culpa consectetur dolor pariatur commodo aliqua amet tempor nisi enim deserunt elit cillum.
+  description: Everything you need to know about Skip billing and limits.
   items:
-    - label: Is this a secure service?
-      content: Qui sunt nostrud aliquip reprehenderit enim proident veniam magna aliquip velit occaecat eiusmod nisi deserunt sunt.
-    - label: How can I cancel my subscription?
-      content: Consectetur irure Lorem nostrud adipisicing aliqua mollit Lorem sit officia magna eiusmod cupidatat.
-    - label: How does the free trial work?
-      content: Quis officia commodo magna eu qui aliquip duis.
-    - label: Can I switch plans later?
-      content: Dolore irure ullamco dolore eu occaecat magna eiusmod dolor aliqua culpa labore.
+    - label: What does the Free plan include?
+      content: The Free plan covers 10,000 tracked link clicks per team each month, plus unlimited links and members.
+    - label: What happens after 10,000 clicks?
+      content: We’ll keep tracking, but you’ll need Pro to avoid caps and unlock unlimited clicks going forward.
+    - label: Can I switch between monthly and yearly?
+      content: Yes. You can move between monthly and yearly billing anytime in the Stripe billing portal.
+    - label: How do I manage or cancel my subscription?
+      content: Owners and admins can open the billing portal from the dashboard to update payment details or cancel.
+    - label: Is pricing per team?
+      content: Yes. Each team has its own subscription so you only pay for the teams that need unlimited volume.
     - label: Do you offer refunds?
-      content: Duis mollit nostrud voluptate mollit Lorem dolore commodo veniam incididunt eiusmod.
-    - label: Do you offer support?
-      content: Aliqua sit nisi consequat pariatur Lorem minim irure qui.
+      content: We don’t offer automatic refunds, but contact support if something went wrong and we’ll help.

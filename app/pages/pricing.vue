@@ -61,17 +61,6 @@ const items = ref([
       </UPricingPlans>
     </UContainer>
 
-    <UPageSection>
-      <UPageLogos>
-        <UIcon
-          v-for="icon in page.logos.icons"
-          :key="icon"
-          :name="icon"
-          class="w-12 h-12 flex-shrink-0 text-muted"
-        />
-      </UPageLogos>
-    </UPageSection>
-
     <UPageSection
       :title="page.faq.title"
       :description="page.faq.description"
