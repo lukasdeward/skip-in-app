@@ -59,6 +59,8 @@ const statusCopy = computed(() => {
 })
 
 const canStartCheckout = computed(() => props.canManage && billingInfo.value?.plan !== 'PRO')
+const hasActivePro = computed(() => billingInfo.value?.plan === 'PRO')
+const showPlanSelection = computed(() => !hasActivePro.value)
 const intervalOptions = [
   { label: 'Monthly', value: 'month' },
   { label: 'Yearly', value: 'year' }
@@ -279,7 +281,10 @@ watch(billingInfo, (info) => {
         </div>
       </UCard>
 
-      <div class="grid gap-4 md:grid-cols-2">
+      <div
+        v-if="showPlanSelection"
+        class="grid gap-4 md:grid-cols-2"
+      >
         <UCard
           :ui="{ body: 'flex flex-col gap-4 h-full' }"
           class="border-dashed"
@@ -335,9 +340,9 @@ watch(billingInfo, (info) => {
           </div>
         </UCard>
 
-        <UCard :ui="{ body: 'flex flex-col gap-4 h-full' }">
-          <div class="flex items-start justify-between gap-3">
-            <div>
+          <UCard :ui="{ body: 'flex flex-col gap-4 h-full' }">
+            <div class="flex items-start justify-between gap-3">
+              <div>
               <p class="text-lg font-semibold">
                 Pro
               </p>

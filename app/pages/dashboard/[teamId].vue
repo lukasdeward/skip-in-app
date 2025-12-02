@@ -163,7 +163,7 @@ watch(teamId, () => {
           </p>
         </div>
         <UButton
-          label="Back to dashboard"
+          label="Back"
           icon="i-lucide-arrow-left"
           variant="ghost"
           color="neutral"
