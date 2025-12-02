@@ -72,6 +72,8 @@ function onSubmitLink() {
           />
         </div>
       </form>
+
+      <LandingFlowAnimation />
     </UPageHero>
 
     <SignupModal v-model:open="showSignup" />
@@ -85,7 +87,13 @@ function onSubmitLink() {
       :reverse="section.reverse"
       :features="section.features"
     >
-      <ImagePlaceholder />
+        <NuxtImg
+          v-if="index === 0"
+          src="/usecase/app.png"
+          alt="Skip prompt asking visitors to open the link in Safari or Chrome"
+          class="h-full w-full object-contain bg-white rounded-xl shadow-lg"
+          loading="lazy"
+        />
     </UPageSection>
 
     <UPageSection
