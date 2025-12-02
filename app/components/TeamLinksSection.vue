@@ -149,6 +149,10 @@ const deleteLink = async (link: TeamLink) => {
 }
 
 const openNewLinkModal = () => {
+  if (hasReachedLimit.value) {
+    toast.add({ title: 'Limit reached', description: 'Free plan allows up to 2 links. Upgrade to add more.', color: 'warning' })
+    return
+  }
   resetLinkForm()
   linkModalOpen.value = true
 }
@@ -157,9 +161,15 @@ const createLinkFromUrl = async (
   targetUrl: string,
   options: { silent?: boolean, trackState?: boolean } = {}
 ) => {
-  if (!props.teamId) return false
-
   const { silent = false, trackState = false } = options
+  
+  if (hasReachedLimit.value) {
+    if (!silent) {
+      toast.add({ title: 'Limit reached', description: 'Free plan allows up to 2 links. Upgrade to add more.', color: 'warning' })
+    }
+    return false
+  }
+  if (!props.teamId) return false
   const parsed = linkSchema.safeParse({ targetUrl })
 
   if (!parsed.success) {
@@ -240,8 +250,37 @@ watch(() => props.teamId, () => {
   linkModalOpen.value = false
   if (props.teamId) {
     fetchLinks()
+    fetchBilling()
   }
 }, { immediate: true })
+
+const billingInfo = ref<{ plan?: 'FREE' | 'PRO' | string | null } | null>(null)
+const billingPending = ref(false)
+const billingError = ref<any>(null)
+
+const fetchBilling = async () => {
+  if (!props.teamId) return
+  billingPending.value = true
+  billingError.value = null
+
+  try {
+    const { data, error } = await useFetch<{ plan?: 'FREE' | 'PRO' | string | null }>(`/api/teams/${props.teamId}/billing`, {
+      server: false,
+      key: `team-billing-links-${props.teamId}-${Date.now()}`
+    })
+    if (error.value) throw error.value
+    billingInfo.value = data.value || null
+  } catch (error: any) {
+    billingError.value = error
+    billingInfo.value = null
+  } finally {
+    billingPending.value = false
+  }
+}
+
+const isFreePlan = computed(() => billingInfo.value ? billingInfo.value.plan !== 'PRO' : false)
+const linkLimit = 2
+const hasReachedLimit = computed(() => isFreePlan.value && links.value.length >= linkLimit)
 
 const buildTeamSlug = (value: string) => {
   const cleaned = value
@@ -300,7 +339,7 @@ const copySkipUrl = async (link: TeamLink) => {
           label="New link"
           icon="i-lucide-plus"
           color="neutral"
-          :disabled="!canManage"
+          :disabled="!canManage || hasReachedLimit"
           @click="openNewLinkModal"
         />
         <UButton
@@ -312,6 +351,15 @@ const copySkipUrl = async (link: TeamLink) => {
         />
       </div>
     </div>
+
+    <UAlert
+      v-if="hasReachedLimit"
+      color="warning"
+      variant="soft"
+      icon="i-lucide-lock"
+      title="Link limit reached on Free"
+      description="Free teams can create up to 2 links. Upgrade to Pro for unlimited links."
+    />
 
     <UCard>
       <div

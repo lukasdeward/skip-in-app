@@ -267,7 +267,10 @@ watch(billingInfo, (info) => {
               Free includes {{ BILLING.freeClickLimit.toLocaleString() }} link clicks. Pro unlocks unlimited clicks.
             </p>
           </div>
-          <div class="flex flex-wrap gap-2">
+          <div
+            v-if="hasActivePro"
+            class="flex flex-wrap gap-2"
+          >
             <UButton
               icon="i-lucide-external-link"
               label="Manage in Stripe"

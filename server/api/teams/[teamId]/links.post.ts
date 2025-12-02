@@ -2,6 +2,7 @@ import { createError, defineEventHandler, getRouterParam, readBody } from 'h3'
 import { TeamRole } from '@prisma/client'
 import prisma from '~~/server/utils/prisma'
 import { requireUser } from '~~/server/utils/auth'
+import { isProPriceId } from '~~/utils/billing'
 
 const validateUrl = (value?: string | null) => {
   if (!value) return null
@@ -31,7 +32,12 @@ export default defineEventHandler(async (event) => {
 
   try {
     const membership = await prisma.teamMember.findUnique({
-      where: { teamId_customerId: { teamId, customerId } }
+      where: { teamId_customerId: { teamId, customerId } },
+      include: {
+        team: {
+          select: { stripePriceId: true }
+        }
+      }
     })
 
     if (!membership) {
@@ -46,6 +52,15 @@ export default defineEventHandler(async (event) => {
 
     if (!targetUrl) {
       throw createError({ statusCode: 400, message: 'A valid target URL is required' })
+    }
+
+    const isPro = isProPriceId(membership.team?.stripePriceId)
+
+    if (!isPro) {
+      const linkCount = await prisma.link.count({ where: { teamId } })
+      if (linkCount >= 2) {
+        throw createError({ statusCode: 403, message: 'Free plan allows up to 2 links. Upgrade to add more.' })
+      }
     }
 
     const link = await prisma.$transaction(async (tx) => {
