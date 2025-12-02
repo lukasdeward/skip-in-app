@@ -1,6 +1,20 @@
 import { createError, defineEventHandler, getQuery, getRouterParam } from 'h3'
 import prisma from '~~/server/utils/prisma'
 import { buildTeamSlug } from '~~/server/utils/teamSlug'
+import { recordLinkAnalytics } from '~~/server/utils/analytics'
+
+type LinkOpenRecord = {
+  id: string
+  teamId: string
+  targetUrl: string
+  team: {
+    logoUrl: string | null
+    name: string | null
+    backgroundColor: string | null
+    textColor: string | null
+    highlightColor: string | null
+  }
+}
 
 export default defineEventHandler(async (event) => {
   const identifier = (getRouterParam(event, 'linkId') || '').toString().trim()
@@ -36,16 +50,7 @@ export default defineEventHandler(async (event) => {
 
   try {
     const teamSlug = slugPart
-    let link: {
-      targetUrl: string
-      team: {
-        logoUrl: string | null
-        name: string | null
-        backgroundColor: string | null
-        textColor: string | null
-        highlightColor: string | null
-      }
-    }
+    let link: LinkOpenRecord
 
     if (shortId !== null && slugPart) {
       let team = await prisma.team.findFirst({
@@ -81,6 +86,8 @@ export default defineEventHandler(async (event) => {
         where: { teamId_shortId: { teamId: team.id, shortId } },
         data: { clickCount: { increment: 1 } },
         select: {
+          id: true,
+          teamId: true,
           targetUrl: true,
           team: {
             select: {
@@ -98,6 +105,8 @@ export default defineEventHandler(async (event) => {
         where: { id: queryId },
         data: { clickCount: { increment: 1 } },
         select: {
+          id: true,
+          teamId: true,
           targetUrl: true,
           team: {
             select: {
@@ -115,6 +124,8 @@ export default defineEventHandler(async (event) => {
         where: { id: teamSlug },
         data: { clickCount: { increment: 1 } },
         select: {
+          id: true,
+          teamId: true,
           targetUrl: true,
           team: {
             select: {
@@ -129,6 +140,8 @@ export default defineEventHandler(async (event) => {
       })
     }
 
+    await recordLinkAnalytics(event, { linkId: link.id, teamId: link.teamId })
+
     return {
       targetUrl: link.targetUrl,
       logoUrl: link.team?.logoUrl ?? null,
@@ -137,12 +150,13 @@ export default defineEventHandler(async (event) => {
       textColor: link.team?.textColor ?? null,
       highlightColor: link.team?.highlightColor ?? null
     }
-  } catch (error: any) {
-    if (error?.statusCode) {
-      throw error
+  } catch (error: unknown) {
+    const typedError = error as { statusCode?: number, code?: string }
+    if (typedError?.statusCode) {
+      throw typedError
     }
 
-    if (error?.code === 'P2025') {
+    if (typedError?.code === 'P2025') {
       throw createError({ statusCode: 404, message: 'Link not found' })
     }
 

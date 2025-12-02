@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import type { ComputedRef } from 'vue'
+import { CurveType, LegendPosition, type BulletLegendItemInterface } from 'vue-chrts'
 
 const props = defineProps<{
   teamId: string
@@ -17,6 +19,41 @@ type TeamLink = {
   createdAt: string
 }
 
+type LinkAnalyticsPoint = {
+  date: string
+  desktop: number
+  mobile: number
+}
+
+type LinkAnalyticsResponse = {
+  days: number
+  series: LinkAnalyticsPoint[]
+  totals: {
+    desktop: number
+    mobile: number
+    total: number
+  }
+}
+
+type RequestError = {
+  data?: { message?: string, statusCode?: number }
+  statusCode?: number
+  message?: string
+}
+
+const normalizeRequestError = (error: unknown): RequestError => {
+  if (error && typeof error === 'object') {
+    return error as RequestError
+  }
+
+  return { message: typeof error === 'string' ? error : undefined }
+}
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  const normalized = normalizeRequestError(error)
+  return normalized.data?.message || normalized.message || fallback
+}
+
 const toast = useToast()
 
 const linkSchema = z.object({
@@ -31,7 +68,7 @@ const newLinkState = reactive<LinkForm>({
 
 const links = ref<TeamLink[]>([])
 const linksPending = ref(false)
-const linksError = ref<any>(null)
+const linksError = ref<RequestError | null>(null)
 const linksLoaded = ref(false)
 const creatingLink = ref(false)
 const autoLinkAttempted = ref(false)
@@ -39,6 +76,31 @@ const editingLinkId = ref<string | null>(null)
 const editingTargetUrl = ref('')
 const savingLinkId = ref<string | null>(null)
 const linkModalOpen = ref(false)
+const analyticsSeries = ref<LinkAnalyticsPoint[]>([])
+const analyticsTotals = ref<LinkAnalyticsResponse['totals']>({
+  desktop: 0,
+  mobile: 0,
+  total: 0
+})
+const analyticsWindow = ref(14)
+const analyticsPending = ref(false)
+const analyticsError = ref<RequestError | null>(null)
+const colorMode = useColorMode()
+
+const analyticsCategories: ComputedRef<Record<string, BulletLegendItemInterface>> = computed(() => ({
+  desktop: {
+    name: 'Desktop',
+    color: '#3b82f6'
+  },
+  mobile: {
+    name: 'Mobile',
+    color: '#22c55e'
+  }
+}))
+
+const analyticsXFormatter = (tick: number): string => {
+  return analyticsSeries.value[tick]?.date || ''
+}
 
 const resetLinkForm = () => {
   newLinkState.targetUrl = ''
@@ -69,8 +131,8 @@ const fetchLinks = async () => {
     if (error.value) throw error.value
     links.value = data.value || []
     linksLoaded.value = true
-  } catch (error: any) {
-    linksError.value = error
+  } catch (error: unknown) {
+    linksError.value = normalizeRequestError(error)
     links.value = []
     linksLoaded.value = false
   } finally {
@@ -78,6 +140,29 @@ const fetchLinks = async () => {
   }
 
   await maybeAutoCreateLink()
+}
+
+const fetchAnalytics = async () => {
+  if (!props.teamId) return
+  analyticsPending.value = true
+  analyticsError.value = null
+
+  try {
+    const { data, error } = await useFetch<LinkAnalyticsResponse>(`/api/teams/${props.teamId}/analytics`, {
+      server: false,
+      key: `team-analytics-${props.teamId}-${Date.now()}`
+    })
+    if (error.value) throw error.value
+    analyticsSeries.value = data.value?.series || []
+    analyticsTotals.value = data.value?.totals || { desktop: 0, mobile: 0, total: 0 }
+    analyticsWindow.value = data.value?.days || analyticsWindow.value || 14
+  } catch (error: unknown) {
+    analyticsError.value = normalizeRequestError(error)
+    analyticsSeries.value = []
+    analyticsTotals.value = { desktop: 0, mobile: 0, total: 0 }
+  } finally {
+    analyticsPending.value = false
+  }
 }
 
 const onCreateLink = async (payload: FormSubmitEvent<LinkForm>) => {
@@ -117,8 +202,8 @@ const saveInlineEdit = async (link: TeamLink) => {
     toast.add({ title: 'Link updated', color: 'success' })
     resetInlineEdit()
     await fetchLinks()
-  } catch (error: any) {
-    const message = error?.data?.message || error?.message || 'Unable to save link'
+  } catch (error: unknown) {
+    const message = getErrorMessage(error, 'Unable to save link')
     toast.add({ title: 'Save failed', description: message, color: 'error' })
   } finally {
     savingLinkId.value = null
@@ -142,8 +227,8 @@ const deleteLink = async (link: TeamLink) => {
       resetInlineEdit()
     }
     await fetchLinks()
-  } catch (error: any) {
-    const message = error?.data?.message || error?.message || 'Unable to delete link'
+  } catch (error: unknown) {
+    const message = getErrorMessage(error, 'Unable to delete link')
     toast.add({ title: 'Delete failed', description: message, color: 'error' })
   }
 }
@@ -199,9 +284,9 @@ const createLinkFromUrl = async (
 
     await fetchLinks()
     return true
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (!silent) {
-      const message = error?.data?.message || error?.message || 'Unable to save link'
+      const message = getErrorMessage(error, 'Unable to save link')
       toast.add({ title: 'Save failed', description: message, color: 'error' })
     }
     return false
@@ -234,7 +319,7 @@ const maybeAutoCreateLink = async () => {
   if (created) {
     try {
       localStorage.removeItem('landing:last-url')
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('[team-links] Failed to clear landing:last-url', error)
     }
     toast.add({ title: 'Link created', description: 'We added your URL.', color: 'success' })
@@ -248,15 +333,21 @@ watch(() => props.teamId, () => {
   resetLinkForm()
   resetInlineEdit()
   linkModalOpen.value = false
+  analyticsSeries.value = []
+  analyticsTotals.value = { desktop: 0, mobile: 0, total: 0 }
+  analyticsWindow.value = 14
+  analyticsError.value = null
+  analyticsPending.value = false
   if (props.teamId) {
     fetchLinks()
     fetchBilling()
+    fetchAnalytics()
   }
 }, { immediate: true })
 
 const billingInfo = ref<{ plan?: 'FREE' | 'PRO' | string | null } | null>(null)
 const billingPending = ref(false)
-const billingError = ref<any>(null)
+const billingError = ref<RequestError | null>(null)
 
 const fetchBilling = async () => {
   if (!props.teamId) return
@@ -270,8 +361,8 @@ const fetchBilling = async () => {
     })
     if (error.value) throw error.value
     billingInfo.value = data.value || null
-  } catch (error: any) {
-    billingError.value = error
+  } catch (error: unknown) {
+    billingError.value = normalizeRequestError(error)
     billingInfo.value = null
   } finally {
     billingPending.value = false
@@ -281,6 +372,7 @@ const fetchBilling = async () => {
 const isFreePlan = computed(() => billingInfo.value ? billingInfo.value.plan !== 'PRO' : false)
 const linkLimit = 2
 const hasReachedLimit = computed(() => isFreePlan.value && links.value.length >= linkLimit)
+const hasAnalyticsData = computed(() => analyticsTotals.value.total > 0)
 
 const buildTeamSlug = (value: string) => {
   const cleaned = value
@@ -314,8 +406,8 @@ const copySkipUrl = async (link: TeamLink) => {
   try {
     await copy(url)
     toast.add({ title: 'Link copied', description: url, color: 'neutral' })
-  } catch (error: any) {
-    const message = error?.message || 'Unable to copy link'
+  } catch (error: unknown) {
+    const message = getErrorMessage(error, 'Unable to copy link')
     toast.add({ title: 'Copy failed', description: message, color: 'error' })
   } finally {
     copyingLinkId.value = null
@@ -351,6 +443,102 @@ const copySkipUrl = async (link: TeamLink) => {
         />
       </div>
     </div>
+
+    <UCard>
+      <template #header>
+        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p class="font-semibold">
+              Link analytics
+            </p>
+            <p class="text-muted text-sm">
+              Opens by device in the last {{ analyticsWindow }} days.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <UBadge
+              color="neutral"
+              variant="subtle"
+            >
+              {{ analyticsTotals.total }} opens
+            </UBadge>
+            <UButton
+              icon="i-lucide-rotate-ccw"
+              color="neutral"
+              variant="ghost"
+              :loading="analyticsPending"
+              :disabled="analyticsPending"
+              @click="fetchAnalytics"
+            />
+          </div>
+        </div>
+      </template>
+
+      <div class="space-y-4">
+        <div class="flex flex-wrap gap-2 text-sm">
+          <UBadge
+            color="neutral"
+            variant="subtle"
+          >
+            Desktop: {{ analyticsTotals.desktop }}
+          </UBadge>
+          <UBadge
+            color="success"
+            variant="subtle"
+          >
+            Mobile: {{ analyticsTotals.mobile }}
+          </UBadge>
+        </div>
+
+        <div class="min-h-[260px]">
+          <div
+            v-if="analyticsPending"
+            class="flex items-center gap-2 text-muted"
+          >
+            <UIcon
+              name="i-lucide-loader-2"
+              class="animate-spin"
+            />
+            Loading analytics...
+          </div>
+          <UAlert
+            v-else-if="analyticsError"
+            color="error"
+            variant="subtle"
+            title="Could not load analytics"
+            :description="analyticsError?.data?.message || analyticsError?.message || 'Please try again.'"
+          />
+          <div
+            v-else-if="analyticsSeries.length === 0"
+            class="text-muted"
+          >
+            No analytics yet. Share your Skip links to start seeing opens.
+          </div>
+          <div
+            v-else
+            class="space-y-3"
+          >
+            <p
+              v-if="!hasAnalyticsData"
+              class="text-muted text-sm"
+            >
+              No opens yet. Charts will populate as soon as links are visited.
+            </p>
+            <AreaChart
+              :key="colorMode.value"
+              :data="analyticsSeries"
+              :height="280"
+              :categories="analyticsCategories"
+              :y-grid-line="true"
+              :x-formatter="analyticsXFormatter"
+              :curve-type="CurveType.MonotoneX"
+              :legend-position="LegendPosition.BottomCenter"
+              :hide-legend="false"
+            />
+          </div>
+        </div>
+      </div>
+    </UCard>
 
     <UAlert
       v-if="hasReachedLimit"

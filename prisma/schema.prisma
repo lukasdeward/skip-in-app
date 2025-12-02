@@ -37,6 +37,7 @@ model Team {
   updatedAt              DateTime     @updatedAt
   customer               Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
   links                  Link[]
+  analytics              LinkAnalytics[]
   members                TeamMember[]
 }
 
@@ -61,12 +62,33 @@ model Link {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  analytics   LinkAnalytics[]
 
   @@unique([teamId, shortId])
+}
+
+model LinkAnalytics {
+  id        String     @id @default(cuid())
+  linkId    String
+  teamId    String
+  device    DeviceType @default(DESKTOP)
+  userAgent String?
+  referrer  String?
+  createdAt DateTime   @default(now())
+  link      Link       @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  team      Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, createdAt])
+  @@index([linkId, createdAt])
 }
 
 enum TeamRole {
   OWNER
   ADMIN
   MEMBER
+}
+
+enum DeviceType {
+  DESKTOP
+  MOBILE
 }

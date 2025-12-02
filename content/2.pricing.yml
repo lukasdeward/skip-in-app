@@ -13,6 +13,7 @@ plans:
     button:
       label: Get started
       color: neutral
+      to: /signup
       variant: subtle
     features:
       - 10,000 tracked link clicks per month
