@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import appScreenshotUrl from '~/assets/images/usecase/app.png'
+
 const { data: page } = await useAsyncData('index', () => queryCollection('index').first())
 const router = useRouter()
 const userUrl = ref('')
@@ -88,8 +90,8 @@ function onSubmitLink() {
       :features="section.features"
     >
       <div v-if="index === 0" class="w-full justify-center flex items-center">
-        <NuxtImg
-          src="/usecase/app.png"
+        <img
+          :src="appScreenshotUrl"
           alt="Skip prompt asking visitors to open the link in Safari or Chrome"
           class="object-contain w-2/3 bg-white"
           loading="lazy"
