@@ -59,6 +59,12 @@ const statusCopy = computed(() => {
 })
 
 const canStartCheckout = computed(() => props.canManage && billingInfo.value?.plan !== 'PRO')
+const intervalOptions = [
+  { label: 'Monthly', value: 'month' },
+  { label: 'Yearly', value: 'year' }
+]
+const selectedInterval = ref<BillingInterval>('month')
+const proPriceLabel = computed(() => selectedInterval.value === 'year' ? BILLING.pro.yearlyLabel : BILLING.pro.monthlyLabel)
 
 const fetchBilling = async () => {
   if (!props.teamId) return
@@ -168,6 +174,13 @@ watch(() => props.teamId, () => {
 watch(billingQueryState, (state) => {
   if (state && !billingPending.value) {
     fetchBilling()
+  }
+})
+
+watch(billingInfo, (info) => {
+  if (!info) return
+  if (info.interval === 'year' || info.interval === 'month') {
+    selectedInterval.value = info.interval
   }
 })
 </script>
@@ -341,42 +354,46 @@ watch(billingQueryState, (state) => {
             </UBadge>
           </div>
 
+          <UTabs
+            v-model="selectedInterval"
+            :items="intervalOptions"
+            class="w-full"
+            color="neutral"
+            size="sm"
+            :ui="{
+              list: 'w-full',
+              indicator: 'rounded-lg'
+            }"
+          />
+
           <div class="space-y-3">
             <div class="flex items-baseline gap-2">
               <p class="text-3xl font-bold">
-                {{ BILLING.pro.monthlyLabel }}
+                {{ proPriceLabel }}
               </p>
-              <UBadge color="neutral" variant="subtle">
+              <UBadge
+                v-if="selectedInterval === 'year'"
+                color="primary"
+                variant="subtle"
+              >
+                Best value
+              </UBadge>
+              <UBadge
+                v-else
+                color="neutral"
+                variant="subtle"
+              >
                 Monthly
               </UBadge>
             </div>
             <UButton
               block
               color="primary"
-              :loading="checkoutLoading === 'month'"
+              :variant="selectedInterval === 'year' ? 'soft' : 'solid'"
+              :loading="checkoutLoading === selectedInterval"
               :disabled="!canStartCheckout || billingPending"
-              label="Choose monthly"
-              @click="startCheckout('month')"
-            />
-          </div>
-
-          <div class="space-y-3">
-            <div class="flex items-baseline gap-2">
-              <p class="text-3xl font-bold">
-                {{ BILLING.pro.yearlyLabel }}
-              </p>
-              <UBadge color="primary" variant="subtle">
-                Best value
-              </UBadge>
-            </div>
-            <UButton
-              block
-              color="primary"
-              variant="soft"
-              :loading="checkoutLoading === 'year'"
-              :disabled="!canStartCheckout || billingPending"
-              label="Choose yearly"
-              @click="startCheckout('year')"
+              :label="selectedInterval === 'year' ? 'Choose yearly' : 'Choose monthly'"
+              @click="startCheckout(selectedInterval)"
             />
           </div>
 
