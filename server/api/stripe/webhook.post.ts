@@ -38,15 +38,21 @@ const extractSubscriptionFields = (subscription: SubscriptionLike) => {
       subscriptionId: null as string | null,
       priceId: undefined as string | null | undefined,
       currentPeriodEnd: undefined as Date | null | undefined,
-      cancelAtPeriodEnd: undefined as boolean | undefined
+      cancelAtPeriodEnd: undefined as boolean | undefined,
+      status: null as string | null
     }
   }
 
+  const status = (subscription as Stripe.Subscription).status || null
+  const basePriceId = subscription.items?.data?.[0]?.price?.id ?? null
+  const priceId = status === 'canceled' ? null : basePriceId
+
   return {
     subscriptionId: subscription.id,
-    priceId: subscription.items?.data?.[0]?.price?.id ?? null,
+    priceId,
     currentPeriodEnd: subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null,
-    cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end)
+    cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+    status
   }
 }
 

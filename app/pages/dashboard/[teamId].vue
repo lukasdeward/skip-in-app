@@ -221,9 +221,13 @@ watch(teamId, () => {
 
         <div
           v-else-if="activeTab === 'billing'"
-          class="text-muted"
+          class="space-y-4"
         >
-          Billing and subscription details. (Coming soon)
+          <TeamBillingSection
+            :team-id="team.id"
+            :team-name="team.name"
+            :can-manage="canManageTeam"
+          />
         </div>
       </div>
     </template>
