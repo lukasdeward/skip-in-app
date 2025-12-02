@@ -87,13 +87,15 @@ function onSubmitLink() {
       :reverse="section.reverse"
       :features="section.features"
     >
+      <div v-if="index === 0" class="w-full justify-center flex items-center">
         <NuxtImg
-          v-if="index === 0"
           src="/usecase/app.png"
           alt="Skip prompt asking visitors to open the link in Safari or Chrome"
-          class="h-full w-full object-contain bg-white rounded-xl shadow-lg"
+          class="object-contain w-2/3 bg-white"
           loading="lazy"
         />
+      </div>
+
     </UPageSection>
 
     <UPageSection
@@ -126,10 +128,17 @@ function onSubmitLink() {
           :ui="{ description: 'before:content-[open-quote] after:content-[close-quote]' }"
         >
           <template #footer>
-            <UUser
-              v-bind="testimonial.user"
-              size="lg"
-            />
+            <div
+              class="flex items-center gap-1 text-amber-400 dark:text-amber-300"
+              :aria-label="`${testimonial.rating || 5}-star testimonial`"
+            >
+              <UIcon
+                v-for="i in testimonial.rating || 5"
+                :key="i"
+                name="i-lucide-star"
+                class="h-5 w-5"
+              />
+            </div>
           </template>
         </UPageCard>
       </UPageColumns>

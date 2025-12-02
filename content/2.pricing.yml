@@ -16,10 +16,8 @@ plans:
       variant: subtle
     features:
       - 10,000 tracked link clicks per month
-      - Unlimited links
+      - 2 Links per team
       - Team members included
-      - Click analytics
-      - Email support
   - title: Pro
     description: Unlimited link clicks for growing teams.
     price:
@@ -29,11 +27,11 @@ plans:
     scale: true
     button:
       label: Upgrade to Pro
+      to: /signup
     features:
       - Unlimited link clicks
-      - Priority support
-      - Billing per team
-      - Works for all links and destinations
+      - Unlimited links
+      - Branding
 faq:
   title: Frequently asked questions
   description: Everything you need to know about Skip billing and limits.

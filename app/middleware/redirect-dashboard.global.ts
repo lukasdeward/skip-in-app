@@ -8,7 +8,7 @@ export default defineNuxtRouteMiddleware((to) => {
   const isOpenRoute = to.path.startsWith('/open/')
   const isDashboardRoute = to.path.startsWith('/dashboard')
   const session = useSupabaseSession()
-  const { redirectPath } = useAuthRedirect()
+  const { redirectPath } = useAuthRedirect('/dashboard', to)
 
   const handleRedirect = () => {
     const isAuthenticated = !!session.value

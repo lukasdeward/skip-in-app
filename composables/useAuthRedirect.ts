@@ -1,5 +1,9 @@
-export const useAuthRedirect = (fallbackPath = '/dashboard') => {
-  const route = useRoute()
+import type { RouteLocationNormalized } from 'vue-router'
+
+type RouteLike = Pick<RouteLocationNormalized, 'query'>
+
+export const useAuthRedirect = (fallbackPath = '/dashboard', routeOverride?: RouteLike) => {
+  const route = routeOverride ?? useRoute()
   const requestURL = useRequestURL()
   const redirectCookie = useSupabaseCookieRedirect()
   const storedRedirect = useState<string | null>('auth-redirect-path', () => redirectCookie.path.value || null)

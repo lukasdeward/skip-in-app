@@ -7,7 +7,7 @@ navigation: false
 hero:
   links: []
 sections:
-  - title: About Skip
+  - title: Boost Ad Revenue by 25%
     description: Users can create a single link for social media profiles. When customers click it, Skip prompts them to open Safari or Chrome instead of the in-app browser, which lifts conversions because purchases rarely complete inside in-app browsers.
     id: about-skip
     orientation: horizontal
@@ -19,7 +19,7 @@ sections:
         description: Visitors are nudged to open in Safari/Chrome so checkout, auth, and payments work reliably.
         icon: i-lucide-external-link
       - name: Higher trust, fewer drop-offs
-        description: Keep users in familiar, secure browsers to reduce friction and abandoned carts.
+        description: Keep users in browsers where they can actually buy
         icon: i-lucide-shield-check
   - title: Built for conversion
     description: Everything in Skip is tuned to keep users in the best-performing path from click to purchase.
@@ -41,32 +41,20 @@ testimonials:
   description: Marketers and founders use Skip to stop losing sales when links open inside social apps.
   items:
     - quote: We turned on Skip and immediately saw more users complete checkout because they landed in Safari instead of the Instagram webview.
-      user:
-        name: Casey Miller
-        description: Growth Lead, Driftline
-        avatar:
-          src: https://i.pravatar.cc/120?img=21
+      rating: 5
     - quote: Payments and SSO no longer break. The open-in-browser prompt fixed the drop-off we saw from in-app browsers.
-      user:
-        name: Priya Desai
-        description: Product Manager, Clearcart
-        avatar:
-          src: https://i.pravatar.cc/120?img=22
+      rating: 5
     - quote: One link everywhere and a branded prompt. Skip keeps our bio traffic converting instead of getting stuck.
-      user:
-        name: Jordan Lee
-        description: Founder, Sunny Labs
-        avatar:
-          src: https://i.pravatar.cc/120?img=23
+      rating: 5
 cta:
-  title: Ready to stop losing conversions in in-app browsers?
+  title: Use Skip for free
   description: Create your Skip link and guide every visitor to Safari or Chrome for a smoother path to purchase.
   links:
     - label: Create your Skip link
       to: /signup
       trailingIcon: i-lucide-arrow-right
     - label: View on GitHub
-      to: 'https://github.com/nuxt-ui-templates/saas'
+      to: 'https://github.com/lukasdeward'
       target: _blank
       variant: subtle
       icon: i-simple-icons-github

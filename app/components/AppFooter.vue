@@ -4,8 +4,6 @@ const user = useSupabaseUser()
 const resourcesColumn = {
   label: 'Resources',
   children: [{
-    label: 'Help center'
-  }, {
     label: 'Blog',
     to: '/blog'
   }, {

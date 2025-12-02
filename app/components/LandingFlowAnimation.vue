@@ -23,35 +23,35 @@ const socialNodes: FlowNode[] = [
     icon: 'i-simple-icons-instagram',
     x: 115,
     y: 82,
-    badgeClass: 'bg-gradient-to-br from-[#fbe18a] via-[#fbc2eb] to-[#fd5949] text-neutral-900 ring-1 ring-white/50 shadow-[0_10px_40px_-20px_rgba(253,89,73,0.65)]'
+    badgeClass: 'bg-neutral-900 text-white'
   },
   {
     name: 'TikTok',
     icon: 'i-simple-icons-tiktok',
     x: 105,
     y: 188,
-    badgeClass: 'bg-neutral-900 text-white ring-1 ring-white/10 shadow-[0_10px_40px_-24px_rgba(255,255,255,0.5)]'
+    badgeClass: 'bg-neutral-900 text-white'
   },
   {
     name: 'Snapchat',
     icon: 'i-simple-icons-snapchat',
     x: 128,
     y: 296,
-    badgeClass: 'bg-[#fffc00] text-neutral-900 ring-1 ring-neutral-200 shadow-[0_10px_40px_-20px_rgba(255,252,0,0.5)]'
+    badgeClass: 'bg-neutral-900 text-white'
   }
 ]
 
 const browserNodes: FlowNode[] = [
   {
     name: 'Safari',
-    icon: 'i-simple-icons-safari',
+    icon: 'i-logos-safari',
     x: 1000,
     y: 140,
     badgeClass: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200 shadow-[0_10px_40px_-20px_rgba(14,165,233,0.35)]'
   },
   {
     name: 'Chrome',
-    icon: 'i-simple-icons-googlechrome',
+    icon: 'i-logos-chrome',
     x: 1000,
     y: 240,
     badgeClass: 'bg-white text-emerald-600 ring-1 ring-neutral-200 shadow-[0_10px_40px_-20px_rgba(34,197,94,0.35)]'
@@ -126,28 +126,34 @@ const updateMobileCurves = () => {
   }
 
   const centerRect = mobileCenterRef.value.getBoundingClientRect()
-  const to = {
+  const centerPoint = {
     x: centerRect.left - areaRect.left + centerRect.width / 2,
     y: centerRect.top - areaRect.top + centerRect.height / 2
   }
 
   const curves: { id: string; d: string }[] = []
 
-  const addCurves = (nodes: (HTMLElement | null)[], prefix: 'social' | 'browser') => {
+  const addCurves = (
+    nodes: (HTMLElement | null)[],
+    prefix: 'social' | 'browser',
+    direction: 'to-center' | 'from-center'
+  ) => {
     const validNodes = nodes
       .map((node, index) => ({ node, index }))
       .filter(({ node }) => node) as { node: HTMLElement; index: number }[]
 
     validNodes.forEach(({ node, index }) => {
       const rect = node.getBoundingClientRect()
-      const from = {
+      const nodePoint = {
         x: rect.left - areaRect.left + rect.width / 2,
         y: rect.top - areaRect.top + rect.height / 2
       }
 
-      const baseOffset = from.x < to.x ? -26 : 26
+      const baseOffset = nodePoint.x < centerPoint.x ? -26 : 26
       const spreadOffset = (index - (validNodes.length - 1) / 2) * 9
       const offset = baseOffset + spreadOffset
+      const from = direction === 'to-center' ? nodePoint : centerPoint
+      const to = direction === 'to-center' ? centerPoint : nodePoint
 
       curves.push({
         id: `mobile-${prefix}-${index}`,
@@ -156,8 +162,8 @@ const updateMobileCurves = () => {
     })
   }
 
-  addCurves(mobileSocialRefs.value, 'social')
-  addCurves(mobileBrowserRefs.value, 'browser')
+  addCurves(mobileSocialRefs.value, 'social', 'to-center')
+  addCurves(mobileBrowserRefs.value, 'browser', 'from-center')
 
   mobileCurves.value = curves
 }
@@ -241,7 +247,7 @@ onBeforeUnmount(() => {
           <div
             v-for="node in socialNodes"
             :key="node.name"
-            class="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-3 rounded-2xl border border-white/60 bg-white/90 px-3 py-2 text-sm font-semibold text-highlighted shadow-[0_15px_40px_-28px_rgba(0,0,0,0.65)] backdrop-blur dark:border-white/10 dark:bg-neutral-900/85"
+            class="absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1 rounded-2xl border border-white/60 bg-white/90 px-3 py-2 text-sm font-semibold text-highlighted shadow-[0_15px_40px_-28px_rgba(0,0,0,0.65)] backdrop-blur dark:border-white/10 dark:bg-neutral-900/85"
             :style="positionStyle(node)"
           >
             <div
