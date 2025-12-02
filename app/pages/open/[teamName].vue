@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import type { BrowserDetection } from '~~/composables/useBrowserRedirect'
 import { useBrowserRedirect } from '~~/composables/useBrowserRedirect'
-import instagramInstructions from '~/assets/instructions/instagram.png'
-import snapchatInstructions from '~/assets/instructions/snapchat.png'
-import tiktokInstructions from '~/assets/instructions/tiktok.png'
+const instructionImages = {
+  tiktok: '/instructions/tiktok.png',
+  instagram: '/instructions/instagram.png',
+  snapchat: '/instructions/snapchat.png'
+} as const
 
 definePageMeta({
   layout: 'open'
@@ -26,12 +28,6 @@ const requestBody = computed(() => ({ url: requestHref.value }))
 const defaultBackgroundColor = '#ffffff'
 const defaultTextColor = '#000000'
 const defaultHighlightColor = '#f97316'
-
-const instructionImages = {
-  tiktok: tiktokInstructions,
-  instagram: instagramInstructions,
-  snapchat: snapchatInstructions
-} as const
 
 type InstructionKey = keyof typeof instructionImages
 

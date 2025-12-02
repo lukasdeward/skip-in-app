@@ -212,202 +212,193 @@ watch(billingQueryState, (state) => {
       </div>
     </div>
 
-    <UCard v-else>
-      <template #header>
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <p class="text-sm text-muted">
-              Current plan for {{ teamName }}
+    <template v-else>
+      <UCard>
+        <template #header>
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <p class="text-sm text-muted">
+                Current plan for {{ teamName }}
+              </p>
+              <p class="text-lg font-semibold">
+                {{ planLabel }}
+              </p>
+            </div>
+            <div class="flex gap-2">
+              <UBadge
+                v-if="billingInfo?.plan === 'PRO'"
+                color="primary"
+                variant="subtle"
+              >
+                Pro active
+              </UBadge>
+              <UBadge
+                v-else
+                color="neutral"
+                variant="subtle"
+              >
+                Free plan
+              </UBadge>
+            </div>
+          </div>
+        </template>
+
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div class="space-y-1">
+            <p class="text-base font-medium">
+              {{ statusCopy }}
             </p>
-            <p class="text-lg font-semibold">
-              {{ planLabel }}
+            <p class="text-sm text-muted">
+              Free includes {{ BILLING.freeClickLimit.toLocaleString() }} link clicks. Pro unlocks unlimited clicks.
             </p>
           </div>
-          <div class="flex gap-2">
+          <div class="flex flex-wrap gap-2">
+            <UButton
+              icon="i-lucide-external-link"
+              label="Manage in Stripe"
+              color="neutral"
+              variant="outline"
+              :loading="portalLoading"
+              :disabled="!canManage"
+              @click="openPortal"
+            />
+          </div>
+        </div>
+      </UCard>
+
+      <div class="grid gap-4 md:grid-cols-2">
+        <UCard
+          :ui="{ body: 'flex flex-col gap-4 h-full' }"
+          class="border-dashed"
+        >
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-lg font-semibold">
+                Free
+              </p>
+              <p class="text-sm text-muted">
+                Start fast with no credit card.
+              </p>
+            </div>
+            <UBadge
+              v-if="billingInfo?.plan === 'FREE'"
+              color="neutral"
+              variant="solid"
+            >
+              Current
+            </UBadge>
+          </div>
+
+          <div class="space-y-2">
+            <p class="text-3xl font-bold">
+              0 EUR
+            </p>
+            <ul class="space-y-1 text-sm text-muted">
+              <li class="flex items-center gap-2">
+                <UIcon name="i-lucide-check" class="text-success" />
+                Up to {{ BILLING.freeClickLimit.toLocaleString() }} link clicks
+              </li>
+              <li class="flex items-center gap-2">
+                <UIcon name="i-lucide-check" class="text-success" />
+                All core features
+              </li>
+            </ul>
+          </div>
+
+          <div class="mt-auto">
+            <UButton
+              label="Manage plan"
+              color="neutral"
+              variant="soft"
+              :disabled="!canManage"
+              @click="openPortal"
+            />
+            <p
+              v-if="!canManage"
+              class="mt-2 text-xs text-muted"
+            >
+              Only team owners or admins can change billing.
+            </p>
+          </div>
+        </UCard>
+
+        <UCard :ui="{ body: 'flex flex-col gap-4 h-full' }">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-lg font-semibold">
+                Pro
+              </p>
+              <p class="text-sm text-muted">
+                Unlimited clicks plus premium support.
+              </p>
+            </div>
             <UBadge
               v-if="billingInfo?.plan === 'PRO'"
               color="primary"
-              variant="subtle"
+              variant="solid"
             >
-              Pro active
-            </UBadge>
-            <UBadge
-              v-else
-              color="neutral"
-              variant="subtle"
-            >
-              Free plan
+              Current
             </UBadge>
           </div>
-        </div>
-      </template>
 
-      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div class="space-y-1">
-          <p class="text-base font-medium">
-            {{ statusCopy }}
-          </p>
-          <p class="text-sm text-muted">
-            Free includes {{ BILLING.freeClickLimit.toLocaleString() }} link clicks. Pro unlocks unlimited clicks.
-          </p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <UButton
-            icon="i-lucide-external-link"
-            label="Manage in Stripe"
-            color="neutral"
-            variant="outline"
-            :loading="portalLoading"
-            :disabled="!canManage"
-            @click="openPortal"
-          />
-        </div>
-      </div>
-    </UCard>
-
-    <div
-      v-else
-      class="grid gap-4 md:grid-cols-2"
-    >
-      <UCard
-        :ui="{ body: 'flex flex-col gap-4 h-full' }"
-        class="border-dashed"
-      >
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <p class="text-lg font-semibold">
-              Free
-            </p>
-            <p class="text-sm text-muted">
-              Start fast with no credit card.
-            </p>
+          <div class="space-y-3">
+            <div class="flex items-baseline gap-2">
+              <p class="text-3xl font-bold">
+                {{ BILLING.pro.monthlyLabel }}
+              </p>
+              <UBadge color="neutral" variant="subtle">
+                Monthly
+              </UBadge>
+            </div>
+            <UButton
+              block
+              color="primary"
+              :loading="checkoutLoading === 'month'"
+              :disabled="!canStartCheckout || billingPending"
+              label="Choose monthly"
+              @click="startCheckout('month')"
+            />
           </div>
-          <UBadge
-            v-if="billingInfo?.plan === 'FREE'"
-            color="neutral"
-            variant="solid"
-          >
-            Current
-          </UBadge>
-        </div>
 
-        <div class="space-y-2">
-          <p class="text-3xl font-bold">
-            0 EUR
-          </p>
+          <div class="space-y-3">
+            <div class="flex items-baseline gap-2">
+              <p class="text-3xl font-bold">
+                {{ BILLING.pro.yearlyLabel }}
+              </p>
+              <UBadge color="primary" variant="subtle">
+                Best value
+              </UBadge>
+            </div>
+            <UButton
+              block
+              color="primary"
+              variant="soft"
+              :loading="checkoutLoading === 'year'"
+              :disabled="!canStartCheckout || billingPending"
+              label="Choose yearly"
+              @click="startCheckout('year')"
+            />
+          </div>
+
           <ul class="space-y-1 text-sm text-muted">
             <li class="flex items-center gap-2">
               <UIcon name="i-lucide-check" class="text-success" />
-              Up to {{ BILLING.freeClickLimit.toLocaleString() }} link clicks
+              Unlimited link clicks
             </li>
             <li class="flex items-center gap-2">
               <UIcon name="i-lucide-check" class="text-success" />
-              All core features
+              Priority support
             </li>
           </ul>
-        </div>
 
-        <div class="mt-auto">
-          <UButton
-            label="Manage plan"
-            color="neutral"
-            variant="soft"
-            :disabled="!canManage"
-            @click="openPortal"
-          />
           <p
-            v-if="!canManage"
-            class="mt-2 text-xs text-muted"
+            v-if="billingInfo?.plan === 'PRO' && !canStartCheckout"
+            class="text-xs text-muted"
           >
-            Only team owners or admins can change billing.
+            To change your plan, open the Stripe portal.
           </p>
-        </div>
-      </UCard>
-
-      <UCard :ui="{ body: 'flex flex-col gap-4 h-full' }">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <p class="text-lg font-semibold">
-              Pro
-            </p>
-            <p class="text-sm text-muted">
-              Unlimited clicks plus premium support.
-            </p>
-          </div>
-          <UBadge
-            v-if="billingInfo?.plan === 'PRO'"
-            color="primary"
-            variant="solid"
-          >
-            Current
-          </UBadge>
-        </div>
-
-        <div class="space-y-3">
-          <div class="flex items-baseline gap-2">
-            <p class="text-3xl font-bold">
-              {{ BILLING.pro.monthlyLabel }}
-            </p>
-            <UBadge color="neutral" variant="subtle">
-              Monthly
-            </UBadge>
-          </div>
-          <UButton
-            block
-            color="primary"
-            :loading="checkoutLoading === 'month'"
-            :disabled="!canStartCheckout || billingPending"
-            label="Choose monthly"
-            @click="startCheckout('month')"
-          />
-        </div>
-
-        <div class="space-y-3">
-          <div class="flex items-baseline gap-2">
-            <p class="text-3xl font-bold">
-              {{ BILLING.pro.yearlyLabel }}
-            </p>
-            <UBadge color="primary" variant="subtle">
-              Best value
-            </UBadge>
-          </div>
-          <UButton
-            block
-            color="primary"
-            variant="soft"
-            :loading="checkoutLoading === 'year'"
-            :disabled="!canStartCheckout || billingPending"
-            label="Choose yearly"
-            @click="startCheckout('year')"
-          />
-        </div>
-
-        <ul class="space-y-1 text-sm text-muted">
-          <li class="flex items-center gap-2">
-            <UIcon name="i-lucide-check" class="text-success" />
-            Unlimited link clicks
-          </li>
-          <li class="flex items-center gap-2">
-            <UIcon name="i-lucide-check" class="text-success" />
-            Priority support
-          </li>
-        </ul>
-
-        <p
-          v-if="billingInfo?.plan === 'PRO' && !canStartCheckout"
-          class="text-xs text-muted"
-        >
-          To change your plan, open the Stripe portal.
-        </p>
-      </UCard>
-    </div>
-
-    <div v-if="billingPending" class="space-y-3">
-      <USkeleton class="h-20 w-full rounded-lg" />
-      <div class="grid gap-3 md:grid-cols-2">
-        <USkeleton class="h-64 w-full rounded-lg" />
-        <USkeleton class="h-64 w-full rounded-lg" />
+        </UCard>
       </div>
-    </div>
+    </template>
   </div>
 </template>
