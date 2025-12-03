@@ -35,23 +35,21 @@ const logoChoice = computed<'white' | 'default' | null>(() => {
 </script>
 
 <template>
-  <NuxtImg
+  <img
     v-if="logoChoice !== null"
+    :src="logoChoice === 'white' ? '/skip-in-app-white.png' : '/skip-in-app.png'"
     alt="Skip In-App logo"
     :class="`${height} w-auto`"
-    format="png"
-    :src="logoChoice === 'white' ? '/skip-in-app-white.png' : '/skip-in-app.png'"
     draggable="false"
-  />
+  >
   <picture v-else class="inline-flex items-center">
     <source srcset="/skip-in-app-white.png" media="(prefers-color-scheme: dark)">
     <source srcset="/skip-in-app.png" media="(prefers-color-scheme: light)">
-    <NuxtImg
+    <img
+      src="/skip-in-app.png"
       alt="Skip In-App logo"
       :class="`${height} w-auto`"
-      format="png"
-      src="/skip-in-app.png"
       draggable="false"
-    />
+    >
   </picture>
 </template>

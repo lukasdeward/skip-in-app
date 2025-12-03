@@ -242,6 +242,7 @@ watch([teamsFetched, teams, () => user.value], () => {
               </p>
               <UInput
                 v-model="newTeamName"
+                class="w-full"
                 placeholder="Team name"
                 :disabled="creatingTeam || teamsPending"
               />
