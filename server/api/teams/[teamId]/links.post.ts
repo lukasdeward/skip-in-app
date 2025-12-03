@@ -84,7 +84,6 @@ export default defineEventHandler(async (event) => {
       id: link.id,
       shortId: link.shortId,
       targetUrl: link.targetUrl,
-      clickCount: link.clickCount,
       createdAt: link.createdAt
     }
   } catch (error: any) {

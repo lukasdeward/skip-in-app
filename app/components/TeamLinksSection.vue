@@ -15,7 +15,6 @@ type TeamLink = {
   id: string
   shortId: number | null
   targetUrl: string
-  clickCount: number
   createdAt: string
 }
 
@@ -98,9 +97,21 @@ const analyticsCategories: ComputedRef<Record<string, BulletLegendItemInterface>
   }
 }))
 
+const totalAnalyticsCategories: ComputedRef<Record<string, BulletLegendItemInterface>> = computed(() => ({
+  total: {
+    name: 'Total',
+    color: '#6366f1'
+  }
+}))
+
 const analyticsXFormatter = (tick: number): string => {
   return analyticsSeries.value[tick]?.date || ''
 }
+
+const totalAnalyticsSeries = computed(() => analyticsSeries.value.map(point => ({
+  date: point.date,
+  total: (point.desktop || 0) + (point.mobile || 0)
+})))
 
 const resetLinkForm = () => {
   newLinkState.targetUrl = ''
@@ -164,6 +175,12 @@ const fetchAnalytics = async () => {
     analyticsPending.value = false
   }
 }
+
+onMounted(() => {
+  if (props.teamId && !analyticsPending.value && !analyticsSeries.value.length && !analyticsError.value) {
+    fetchAnalytics()
+  }
+})
 
 const onCreateLink = async (payload: FormSubmitEvent<LinkForm>) => {
   const created = await createLinkFromUrl(payload.data.targetUrl, { trackState: true })
@@ -515,8 +532,8 @@ const copySkipUrl = async (link: TeamLink) => {
             No analytics yet. Share your Skip links to start seeing opens.
           </div>
           <div
-            v-else
-            class="space-y-3"
+          v-else
+            class="space-y-4"
           >
             <p
               v-if="!hasAnalyticsData"
@@ -524,17 +541,30 @@ const copySkipUrl = async (link: TeamLink) => {
             >
               No opens yet. Charts will populate as soon as links are visited.
             </p>
-            <AreaChart
-              :key="colorMode.value"
-              :data="analyticsSeries"
-              :height="280"
-              :categories="analyticsCategories"
-              :y-grid-line="true"
-              :x-formatter="analyticsXFormatter"
-              :curve-type="CurveType.MonotoneX"
-              :legend-position="LegendPosition.BottomCenter"
-              :hide-legend="false"
-            />
+            <div class="grid gap-4 lg:grid-cols-2">
+              <AreaChart
+                :key="colorMode.value"
+                :data="analyticsSeries"
+                :height="280"
+                :categories="analyticsCategories"
+                :y-grid-line="true"
+                :x-formatter="analyticsXFormatter"
+                :curve-type="CurveType.MonotoneX"
+                :legend-position="LegendPosition.BottomCenter"
+                :hide-legend="false"
+              />
+              <AreaChart
+                :key="`${colorMode.value}-total`"
+                :data="totalAnalyticsSeries"
+                :height="280"
+                :categories="totalAnalyticsCategories"
+                :y-grid-line="true"
+                :x-formatter="analyticsXFormatter"
+                :curve-type="CurveType.MonotoneX"
+                :legend-position="LegendPosition.BottomCenter"
+                :hide-legend="false"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -674,12 +704,6 @@ const copySkipUrl = async (link: TeamLink) => {
             </div>
 
             <div class="flex items-center gap-2 self-start sm:self-center">
-              <UBadge
-                color="neutral"
-                variant="subtle"
-              >
-                {{ link.clickCount }} clicks
-              </UBadge>
               <UButton
                 icon="i-lucide-trash-2"
                 color="error"

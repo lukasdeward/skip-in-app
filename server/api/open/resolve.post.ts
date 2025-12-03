@@ -66,7 +66,21 @@ export default defineEventHandler(async (event): Promise<OpenLinkResponse> => {
 
   try {
     const teamSlug = slugPart
-    let link: OpenLinkRecord
+    let link: OpenLinkRecord | null
+    const linkSelect = {
+      id: true,
+      teamId: true,
+      targetUrl: true,
+      team: {
+        select: {
+          logoUrl: true,
+          name: true,
+          backgroundColor: true,
+          textColor: true,
+          highlightColor: true
+        }
+      }
+    } as const
 
     if (shortId !== null && slugPart) {
       let team = await prisma.team.findFirst({
@@ -98,62 +112,24 @@ export default defineEventHandler(async (event): Promise<OpenLinkResponse> => {
         throw createError({ statusCode: 404, message: 'Team not found' })
       }
 
-      link = await prisma.link.update({
+      link = await prisma.link.findUnique({
         where: { teamId_shortId: { teamId: team.id, shortId } },
-        data: { clickCount: { increment: 1 } },
-        select: {
-          id: true,
-          teamId: true,
-          targetUrl: true,
-          team: {
-            select: {
-              logoUrl: true,
-              name: true,
-              backgroundColor: true,
-              textColor: true,
-              highlightColor: true
-            }
-          }
-        }
+        select: linkSelect
       })
     } else if (rawQueryId) {
-      link = await prisma.link.update({
+      link = await prisma.link.findUnique({
         where: { id: rawQueryId },
-        data: { clickCount: { increment: 1 } },
-        select: {
-          id: true,
-          teamId: true,
-          targetUrl: true,
-          team: {
-            select: {
-              logoUrl: true,
-              name: true,
-              backgroundColor: true,
-              textColor: true,
-              highlightColor: true
-            }
-          }
-        }
+        select: linkSelect
       })
     } else {
-      link = await prisma.link.update({
+      link = await prisma.link.findUnique({
         where: { id: teamSlug },
-        data: { clickCount: { increment: 1 } },
-        select: {
-          id: true,
-          teamId: true,
-          targetUrl: true,
-          team: {
-            select: {
-              logoUrl: true,
-              name: true,
-              backgroundColor: true,
-              textColor: true,
-              highlightColor: true
-            }
-          }
-        }
+        select: linkSelect
       })
+    }
+
+    if (!link) {
+      throw createError({ statusCode: 404, message: 'Link not found' })
     }
 
     await recordLinkAnalytics(event, { linkId: link.id, teamId: link.teamId })
@@ -170,10 +146,6 @@ export default defineEventHandler(async (event): Promise<OpenLinkResponse> => {
     const typedError = error as { statusCode?: number, code?: string }
     if (typedError?.statusCode) {
       throw typedError
-    }
-
-    if (typedError?.code === 'P2025') {
-      throw createError({ statusCode: 404, message: 'Link not found' })
     }
 
     console.error('[open.resolve.post] Failed to resolve link', error)

@@ -8,7 +8,7 @@ hero:
   links: []
 sections:
   - title: Boost Ad Revenue by 25%
-    description: Users can create a single link for social media profiles. When customers click it, Skip prompts them to open Safari or Chrome instead of the in-app browser, which lifts conversions because purchases rarely complete inside in-app browsers.
+    description: Most of Social Media Users view your Site, but never Buy In-app browsers block cookies, payment methods and kill conversions. Skip fixes this by guiding visitors to Safari or Chrome, where everything works.
     id: about-skip
     orientation: horizontal
     features:
@@ -21,7 +21,7 @@ sections:
       - name: Higher trust, fewer drop-offs
         description: Keep users in browsers where they can actually buy
         icon: i-lucide-shield-check
-  - title: Built for conversion
+  - title: Built for sales
     description: Everything in Skip is tuned to keep users in the best-performing path from click to purchase.
     orientation: horizontal
     reverse: true
@@ -30,7 +30,7 @@ sections:
         description: Smart redirects ensure customers land in the best browser for their device.
         icon: i-lucide-smartphone
       - name: Clear, branded handoff
-        description: Lightweight interstitial that keeps your branding while prompting the browser switch.
+        description: Auto-Opens Safari/Chrome with a prompt that builds trust and boosts conversions.
         icon: i-lucide-badge-check
       - name: Insight-ready
         description: Track clicks and completion rates so you see how Skip lifts conversions over in-app browsers.
@@ -45,6 +45,8 @@ testimonials:
     - quote: Payments and SSO no longer break. The open-in-browser prompt fixed the drop-off we saw from in-app browsers.
       rating: 5
     - quote: One link everywhere and a branded prompt. Skip keeps our bio traffic converting instead of getting stuck.
+      rating: 5
+    - quote: Our ad ROAS climbed once we stopped losing people to in-app browsers—Skip gave us an instant lift.
       rating: 5
 cta:
   title: Use Skip for free

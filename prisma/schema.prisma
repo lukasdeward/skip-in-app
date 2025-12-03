@@ -58,7 +58,6 @@ model Link {
   teamId      String
   shortId     Int?     @map("short_id")
   targetUrl   String   @map("target_url")
-  clickCount  Int      @default(0) @map("click_count")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)

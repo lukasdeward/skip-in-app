@@ -97,6 +97,19 @@ function onSubmitLink() {
           loading="lazy"
         />
       </div>
+      <div v-else-if="index === 1" class="w-full flex justify-center">
+        <video
+          src="/app-redirect.mp4"
+          class="w-full max-w border-none"
+          autoplay
+          muted
+          preload="metadata"
+          playsinline
+          loop
+        >
+          Your browser does not support the video tag.
+        </video>
+      </div>
 
     </UPageSection>
 
