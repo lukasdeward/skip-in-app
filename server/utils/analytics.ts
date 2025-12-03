@@ -11,6 +11,31 @@ const normalizeText = (value?: string | null, maxLength = 500): string | undefin
 export const detectDeviceType = (userAgent?: string | null): DeviceType => {
   if (!userAgent) return DeviceType.DESKTOP
   const normalized = userAgent.toLowerCase()
+
+  const botIndicators = [
+    'facebookexternalhit',
+    'googlebot',
+    'adsbot-google',
+    'google-inspectiontool',
+    'bingbot',
+    'baiduspider',
+    'yandexbot',
+    'duckduckbot',
+    'applebot',
+    'slackbot',
+    'discordbot',
+    'twitterbot',
+    'linkedinbot',
+    'pinterestbot',
+    'petalbot',
+    'semrushbot',
+    'ahrefsbot'
+  ]
+
+  if (botIndicators.some(indicator => normalized.includes(indicator))) {
+    return DeviceType.BOT
+  }
+
   const isMobile = /(mobile|iphone|ipod|android|blackberry|iemobile|opera mini|phone)/i.test(normalized)
   return isMobile ? DeviceType.MOBILE : DeviceType.DESKTOP
 }

@@ -22,6 +22,7 @@ type LinkAnalyticsPoint = {
   date: string
   desktop: number
   mobile: number
+  bot: number
 }
 
 type LinkAnalyticsResponse = {
@@ -30,6 +31,7 @@ type LinkAnalyticsResponse = {
   totals: {
     desktop: number
     mobile: number
+    bot: number
     total: number
   }
 }
@@ -79,6 +81,7 @@ const analyticsSeries = ref<LinkAnalyticsPoint[]>([])
 const analyticsTotals = ref<LinkAnalyticsResponse['totals']>({
   desktop: 0,
   mobile: 0,
+  bot: 0,
   total: 0
 })
 const analyticsWindow = ref(14)
@@ -99,7 +102,7 @@ const analyticsXFormatter = (tick: number): string => {
 
 const totalAnalyticsSeries = computed(() => analyticsSeries.value.map(point => ({
   date: point.date,
-  total: (point.desktop || 0) + (point.mobile || 0)
+  total: (point.desktop || 0) + (point.mobile || 0) + (point.bot || 0)
 })))
 
 const resetLinkForm = () => {
@@ -154,12 +157,12 @@ const fetchAnalytics = async () => {
     })
     if (error.value) throw error.value
     analyticsSeries.value = data.value?.series || []
-    analyticsTotals.value = data.value?.totals || { desktop: 0, mobile: 0, total: 0 }
+    analyticsTotals.value = data.value?.totals || { desktop: 0, mobile: 0, bot: 0, total: 0 }
     analyticsWindow.value = data.value?.days || analyticsWindow.value || 14
   } catch (error: unknown) {
     analyticsError.value = normalizeRequestError(error)
     analyticsSeries.value = []
-    analyticsTotals.value = { desktop: 0, mobile: 0, total: 0 }
+    analyticsTotals.value = { desktop: 0, mobile: 0, bot: 0, total: 0 }
   } finally {
     analyticsPending.value = false
   }
@@ -340,7 +343,7 @@ watch(() => props.teamId, () => {
   resetInlineEdit()
   linkModalOpen.value = false
   analyticsSeries.value = []
-  analyticsTotals.value = { desktop: 0, mobile: 0, total: 0 }
+  analyticsTotals.value = { desktop: 0, mobile: 0, bot: 0, total: 0 }
   analyticsWindow.value = 14
   analyticsError.value = null
   analyticsPending.value = false
@@ -493,6 +496,12 @@ const copySkipUrl = async (link: TeamLink) => {
             variant="subtle"
           >
             Mobile: {{ analyticsTotals.mobile }}
+          </UBadge>
+          <UBadge
+            color="warning"
+            variant="subtle"
+          >
+            Bot: {{ analyticsTotals.bot }}
           </UBadge>
         </div>
 

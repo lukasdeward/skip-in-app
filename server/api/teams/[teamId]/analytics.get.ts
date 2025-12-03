@@ -56,21 +56,23 @@ export default defineEventHandler(async (event) => {
     })
 
     const orderedDates: string[] = []
-    const buckets: Record<string, { desktop: number, mobile: number }> = {}
+    const buckets: Record<string, { desktop: number, mobile: number, bot: number }> = {}
 
     for (let i = days - 1; i >= 0; i -= 1) {
       const date = new Date(endDate)
       date.setUTCDate(endDate.getUTCDate() - i)
       const key = formatDateKey(date)
       orderedDates.push(key)
-      buckets[key] = { desktop: 0, mobile: 0 }
+      buckets[key] = { desktop: 0, mobile: 0, bot: 0 }
     }
 
     for (const record of analytics) {
       const key = formatDateKey(record.createdAt)
       const bucket = buckets[key]
       if (!bucket) continue
-      if (record.device === DeviceType.MOBILE) {
+      if (record.device === DeviceType.BOT) {
+        bucket.bot += 1
+      } else if (record.device === DeviceType.MOBILE) {
         bucket.mobile += 1
       } else {
         bucket.desktop += 1
@@ -79,15 +81,18 @@ export default defineEventHandler(async (event) => {
 
     let desktopTotal = 0
     let mobileTotal = 0
+    let botTotal = 0
 
     const series = orderedDates.map(date => {
       const bucket = buckets[date]
       desktopTotal += bucket.desktop
       mobileTotal += bucket.mobile
+      botTotal += bucket.bot
       return {
         date,
         desktop: bucket.desktop,
-        mobile: bucket.mobile
+        mobile: bucket.mobile,
+        bot: bucket.bot
       }
     })
 
@@ -96,7 +101,8 @@ export default defineEventHandler(async (event) => {
       totals: {
         desktop: desktopTotal,
         mobile: mobileTotal,
-        total: desktopTotal + mobileTotal
+        bot: botTotal,
+        total: desktopTotal + mobileTotal + botTotal
       },
       series
     }
