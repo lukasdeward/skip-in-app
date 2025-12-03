@@ -14,10 +14,6 @@ const items = computed(() => {
     to: '/',
     active: route.path === '/'
   }, {
-    label: 'About Skip',
-    to: '/about',
-    active: route.path.startsWith('/about')
-  }, {
     label: 'Blog',
     to: '/blog',
     active: route.path.startsWith('/blog')

@@ -38,10 +38,6 @@ const links = [{
   icon: 'i-lucide-home',
   to: '/'
 }, {
-  label: 'About Skip',
-  icon: 'i-lucide-info',
-  to: '/about'
-}, {
   label: 'Blog',
   icon: 'i-lucide-pencil',
   to: '/blog'
