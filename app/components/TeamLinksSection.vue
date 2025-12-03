@@ -86,17 +86,6 @@ const analyticsPending = ref(false)
 const analyticsError = ref<RequestError | null>(null)
 const colorMode = useColorMode()
 
-const analyticsCategories: ComputedRef<Record<string, BulletLegendItemInterface>> = computed(() => ({
-  desktop: {
-    name: 'Desktop',
-    color: '#3b82f6'
-  },
-  mobile: {
-    name: 'Mobile',
-    color: '#22c55e'
-  }
-}))
-
 const totalAnalyticsCategories: ComputedRef<Record<string, BulletLegendItemInterface>> = computed(() => ({
   total: {
     name: 'Total',
@@ -469,7 +458,7 @@ const copySkipUrl = async (link: TeamLink) => {
               Link analytics
             </p>
             <p class="text-muted text-sm">
-              Opens by device in the last {{ analyticsWindow }} days.
+              Opens in the last {{ analyticsWindow }} days.
             </p>
           </div>
           <div class="flex items-center gap-2">
@@ -541,30 +530,17 @@ const copySkipUrl = async (link: TeamLink) => {
             >
               No opens yet. Charts will populate as soon as links are visited.
             </p>
-            <div class="grid gap-4 lg:grid-cols-2">
-              <AreaChart
-                :key="colorMode.value"
-                :data="analyticsSeries"
-                :height="280"
-                :categories="analyticsCategories"
-                :y-grid-line="true"
-                :x-formatter="analyticsXFormatter"
-                :curve-type="CurveType.MonotoneX"
-                :legend-position="LegendPosition.BottomCenter"
-                :hide-legend="false"
-              />
-              <AreaChart
-                :key="`${colorMode.value}-total`"
-                :data="totalAnalyticsSeries"
-                :height="280"
-                :categories="totalAnalyticsCategories"
-                :y-grid-line="true"
-                :x-formatter="analyticsXFormatter"
-                :curve-type="CurveType.MonotoneX"
-                :legend-position="LegendPosition.BottomCenter"
-                :hide-legend="false"
-              />
-            </div>
+            <AreaChart
+              :key="`${colorMode.value}-total`"
+              :data="totalAnalyticsSeries"
+              :height="280"
+              :categories="totalAnalyticsCategories"
+              :y-grid-line="true"
+              :x-formatter="analyticsXFormatter"
+              :curve-type="CurveType.MonotoneX"
+              :legend-position="LegendPosition.BottomCenter"
+              :hide-legend="false"
+            />
           </div>
         </div>
       </div>
