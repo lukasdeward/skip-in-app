@@ -11,14 +11,32 @@ definePageMeta({
   layout: 'open'
 })
 
-type OpenLinkResponse = {
-  targetUrl: string
+type TeamTheme = {
   logoUrl: string | null
   teamName: string | null
+  teamSlug: string | null
   backgroundColor: string | null
   textColor: string | null
   highlightColor: string | null
 }
+
+type OpenLinkEntry = {
+  id: string
+  shortId: number | null
+  title: string | null
+  targetUrl: string
+}
+
+type OpenLinkResponse = TeamTheme & (
+  | {
+    type: 'single'
+    link: OpenLinkEntry
+  }
+  | {
+    type: 'list'
+    links: OpenLinkEntry[]
+  }
+)
 
 const showDiagnostics = useState('open-show-diagnostics', () => false)
 const requestURL = import.meta.server ? useRequestURL() : null
@@ -68,7 +86,47 @@ const ensureUtmSourceSkipsocial = (rawUrl?: string | null) => {
   }
 }
 
-const redirectTargetUrl = computed(() => ensureUtmSourceSkipsocial(data.value?.targetUrl))
+const singleLink = computed(() => data.value?.type === 'single' ? data.value.link : null)
+const isListView = computed(() => data.value?.type === 'list')
+const listLinks = computed(() => data.value?.type === 'list' ? data.value.links : [])
+const redirectTargetUrl = computed(() => ensureUtmSourceSkipsocial(singleLink.value?.targetUrl))
+
+const requestedSlug = computed(() => {
+  if (!requestHref.value) return ''
+  try {
+    const parsed = new URL(requestHref.value)
+    const segments = parsed.pathname.split('/').filter(Boolean)
+    return decodeURIComponent(segments[segments.length - 1] || '')
+  } catch {
+    return ''
+  }
+})
+
+const resolvedTeamSlug = computed(() => {
+  const explicit = data.value?.teamSlug?.toString().trim()
+  if (explicit) return explicit
+
+  const slug = requestedSlug.value
+  if (!slug) return ''
+
+  const lastDash = slug.lastIndexOf('-')
+  const suffix = slug.slice(lastDash + 1)
+  const suffixIsNumber = lastDash > 0 && /^[0-9]+$/.test(suffix)
+  return suffixIsNumber ? slug.slice(0, lastDash) : slug
+})
+
+const buildListHref = (link: OpenLinkEntry) => {
+  const slug = resolvedTeamSlug.value
+  if (slug && link.shortId !== null) {
+    return `/open/${encodeURIComponent(slug)}-${link.shortId}`
+  }
+  return `/open/${link.id}`
+}
+
+const listLinksWithHref = computed(() => listLinks.value.map(link => ({
+  ...link,
+  href: buildListHref(link)
+})))
 
 const isLocalhost = computed(() => {
   if (!import.meta.client) return false
@@ -77,6 +135,7 @@ const isLocalhost = computed(() => {
 })
 
 const attemptRedirect = async (force = false) => {
+  if (!singleLink.value) return
   // Never auto-redirect when debugging locally to keep the interstitial visible.
   if (!force && isLocalhost.value) return
   if (!redirectTargetUrl.value) return
@@ -120,16 +179,19 @@ const retry = async () => {
   await attemptRedirect()
 }
 
-const status = computed<'loading' | 'redirecting' | 'warning' | 'error'>(() => {
+const status = computed<'loading' | 'redirecting' | 'warning' | 'error' | 'list'>(() => {
   if (error.value) return 'error'
-  if (shouldShowWebViewWarning.value) return 'warning'
   if (pending.value) return 'loading'
+  if (isListView.value) return 'list'
+  if (shouldShowWebViewWarning.value) return 'warning'
   return 'redirecting'
 })
 
 const message = computed(() => {
   if (status.value === 'loading') return 'Looking up your Skip link...'
+  if (status.value === 'list') return 'Choose a link to continue.'
   if (status.value === 'redirecting') return 'Redirecting you to your destination...'
+  if (status.value === 'warning') return 'Open this page in your system browser to continue.'
   const rawError = error.value
 
   if (rawError && typeof rawError === 'object') {
@@ -214,8 +276,19 @@ const detectedLabels = computed(() => {
 const logoUrl = computed(() => data.value?.logoUrl)
 const teamName = computed(() => data.value?.teamName)
 
+const pageTitle = computed(() => {
+  if (isListView.value) {
+    if (teamName.value) {
+      return `${teamName.value} links`
+    }
+    return 'Skip links'
+  }
+
+  return redirectTargetUrl.value || singleLink.value?.targetUrl || 'Redirecting...'
+})
+
 useSeoMeta({
-  title: redirectTargetUrl.value || data.value?.targetUrl || 'Redirecting...'
+  title: pageTitle.value
 })
 </script>
 
@@ -229,37 +302,118 @@ useSeoMeta({
       :style="{ color: textColor }"
     >
 
-      <InAppBrowserInstructions
-        class="mt-2"
-        :browser-name="browserName"
-        :logo-url="logoUrl || undefined"
-        :team-name="teamName || undefined"
-        :text-color="textColor"
-        :background-color="backgroundColor"
-        :highlight-color="highlightColor"
-        :platform="primaryPlatform"
-        :instruction-image="instructionImage || undefined"
-        :error="status === 'error' ? message : undefined"
-      />
-
-      <div class="max-w-3xl py-10">
+      <div class="space-y-8">
         <div
-          v-if="showDiagnostics && detectedLabels.length > 0"
-          class="mt-6 space-y-2 text-sm"
-          :style="{ color: textColor }"
+          v-if="status === 'error'"
+          class="rounded-xl border border-red-300/60 bg-red-50/70 px-4 py-3 text-sm text-red-900 dark:border-red-900/60 dark:bg-red-950/60 dark:text-red-100"
         >
-          <p class="font-semibold">
-            WebView diagnostics
-          </p>
-          <div class="grid grid-cols-1 gap-2">
-            <div
-              v-for="item in detectedLabels"
-              :key="item.label"
-              class="flex flex-col sm:flex-row sm:items-start sm:gap-2 border border-dashed rounded-lg p-3"
+          {{ message }}
+        </div>
+
+        <div
+          v-else-if="status === 'loading'"
+          class="flex items-center gap-2 text-sm opacity-80"
+        >
+          <UIcon
+            name="i-lucide-loader-2"
+            class="h-5 w-5 animate-spin"
+          />
+          {{ message }}
+        </div>
+
+        <InAppBrowserInstructions
+          v-if="!isListView && status !== 'error' && status !== 'loading'"
+          class="mt-2"
+          :browser-name="browserName"
+          :logo-url="logoUrl || undefined"
+          :team-name="teamName || undefined"
+          :text-color="textColor"
+          :background-color="backgroundColor"
+          :highlight-color="highlightColor"
+          :platform="primaryPlatform"
+          :instruction-image="instructionImage || undefined"
+        />
+
+        <div
+          v-else-if="status === 'list'"
+          class="space-y-4"
+        >
+          <div class="flex items-center gap-3">
+            <img
+              v-if="logoUrl"
+              :src="logoUrl"
+              class="h-12 w-12 rounded-xl bg-white object-contain p-2 shadow-sm"
+              alt=""
+            />
+            <div>
+              <p class="text-xl font-semibold">
+                {{ teamName || 'Links' }}
+              </p>
+              <p class="text-sm opacity-80">
+                {{ message }}
+              </p>
+            </div>
+          </div>
+
+          <div
+            v-if="shouldShowWebViewWarning"
+            class="rounded-lg border px-4 py-3 text-sm"
+            :style="{
+              borderColor: highlightColor || textColor,
+              backgroundColor: `${highlightColor || textColor}10`
+            }"
+          >
+            You are in an in-app browser. Open in {{ browserName }} for the smoothest experience, then pick a link below.
+          </div>
+
+          <div class="grid gap-3">
+            <a
+              v-for="link in listLinksWithHref"
+              :key="link.id"
+              :href="link.href"
+              class="group block rounded-xl border border-dashed p-4 transition hover:-translate-y-0.5 hover:border-neutral-400 hover:bg-white/70 dark:hover:border-neutral-600 dark:hover:bg-neutral-900/50"
               :style="{ borderColor: textColor }"
             >
-              <span class="w-32 shrink-0 opacity-80">{{ item.label }}</span>
-              <span class="break-all">{{ item.value }}</span>
+              <div class="flex items-start justify-between gap-3">
+                <div class="space-y-1">
+                  <p class="font-semibold leading-tight">
+                    {{ link.title || `Link ${link.shortId ?? ''}` || 'Link' }}
+                  </p>
+                  <p class="text-sm break-all opacity-80">
+                    {{ ensureUtmSourceSkipsocial(link.targetUrl) }}
+                  </p>
+                </div>
+                <UIcon
+                  name="i-lucide-arrow-up-right"
+                  class="text-muted transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
+              </div>
+              <p class="mt-2 text-xs opacity-70">
+                Opens via Skip to keep tracking and UTM tags.
+              </p>
+            </a>
+          </div>
+        </div>
+
+        <div class="max-w-3xl py-6">
+          <div
+            v-if="showDiagnostics && detectedLabels.length > 0"
+            class="mt-6 space-y-2 text-sm"
+            :style="{ color: textColor }"
+          >
+            <p class="font-semibold">
+              WebView diagnostics
+            </p>
+            <div class="grid grid-cols-1 gap-2">
+              <div
+                v-for="item in detectedLabels"
+                :key="item.label"
+                class="flex flex-col sm:flex-row sm:items-start sm:gap-2 border border-dashed rounded-lg p-3"
+                :style="{ borderColor: textColor }"
+              >
+                <span class="w-32 shrink-0 opacity-80">{{ item.label }}</span>
+                <span class="break-all">{{ item.value }}</span>
+              </div>
             </div>
           </div>
         </div>

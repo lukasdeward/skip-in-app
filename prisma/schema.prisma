@@ -57,6 +57,7 @@ model Link {
   id          String   @id @default(cuid())
   teamId      String
   shortId     Int?     @map("short_id")
+  title       String?
   targetUrl   String   @map("target_url")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

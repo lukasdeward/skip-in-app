@@ -6,6 +6,16 @@ const router = useRouter()
 const userUrl = ref('')
 const showSignup = ref(false)
 
+const browserFeatureRows = [
+  { feature: 'Multiple tabs for product comparison', inApp: '❌', native: '✅' },
+  { feature: 'Forms & payments autofill available', inApp: '❌', native: '✅' },
+  { feature: 'Browsing history for "Buy Later"', inApp: '❌', native: '✅' },
+  { feature: 'Cookie availability', inApp: '✅', native: '✅' },
+  { feature: 'Push notifications availability', inApp: '❌', native: '✅' },
+  { feature: 'Retargeting availability', inApp: '❌', native: '✅' },
+  { feature: 'Exposure to Google from Social Media', inApp: '❌', native: '✅' }
+]
+
 const title = page.value?.seo?.title || page.value?.title
 const description = page.value?.seo?.description || page.value?.description
 
@@ -79,6 +89,40 @@ function onSubmitLink() {
     </UPageHero>
 
     <SignupModal v-model:open="showSignup" />
+
+    <UPageSection
+      title="In-app browser vs. native browser"
+      description="Most of these features only unlock when shoppers open the link in their native browser."
+    >
+      <div class="w-full overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/60 backdrop-blur">
+        <table class="w-full min-w-[28rem] border-separate border-spacing-0 text-left">
+          <thead class="bg-gray-100 dark:bg-gray-800">
+            <tr>
+              <th class="py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Feature</th>
+              <th class="py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-200">In-app browser</th>
+              <th class="py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-200">Native browser</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="row in browserFeatureRows"
+              :key="row.feature"
+              class="border-t border-gray-200 dark:border-gray-800"
+            >
+              <td class="py-3 px-4 font-medium text-gray-900 dark:text-gray-100">
+                {{ row.feature }}
+              </td>
+              <td class="py-3 px-4 text-lg">
+                {{ row.inApp }}
+              </td>
+              <td class="py-3 px-4 text-lg">
+                {{ row.native }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </UPageSection>
 
     <UPageSection
       v-for="(section, index) in page.sections"

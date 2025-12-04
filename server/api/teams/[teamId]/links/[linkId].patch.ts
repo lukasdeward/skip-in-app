@@ -13,6 +13,16 @@ const validateUrl = (value?: string | null) => {
   }
 }
 
+const normalizeTitle = (value?: string | null) => {
+  if (value === undefined) return undefined
+  const trimmed = value?.toString().trim() || ''
+  if (!trimmed) return null
+  if (trimmed.length > 120) {
+    throw createError({ statusCode: 400, message: 'Title must be 120 characters or fewer' })
+  }
+  return trimmed
+}
+
 export default defineEventHandler(async (event) => {
   const { customerId } = await requireUser(event)
   const teamId = getRouterParam(event, 'teamId')
@@ -28,6 +38,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody<{
     targetUrl?: string
+    title?: string | null
   }>(event)
 
   try {
@@ -59,6 +70,11 @@ export default defineEventHandler(async (event) => {
       updates.targetUrl = targetUrl
     }
 
+    const normalizedTitle = normalizeTitle(body.title)
+    if (normalizedTitle !== undefined) {
+      updates.title = normalizedTitle
+    }
+
     if (Object.keys(updates).length === 0) {
       throw createError({ statusCode: 400, message: 'No updates provided' })
     }
@@ -71,6 +87,7 @@ export default defineEventHandler(async (event) => {
     return {
       id: link.id,
       shortId: link.shortId,
+      title: link.title,
       targetUrl: link.targetUrl,
       createdAt: link.createdAt
     }

@@ -14,6 +14,7 @@ const props = defineProps<{
 type TeamLink = {
   id: string
   shortId: number | null
+  title: string | null
   targetUrl: string
   createdAt: string
 }
@@ -58,13 +59,15 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 const toast = useToast()
 
 const linkSchema = z.object({
-  targetUrl: z.string().trim().url('Enter a valid URL')
+  targetUrl: z.string().trim().url('Enter a valid URL'),
+  title: z.string().trim().max(120, 'Title must be 120 characters or fewer').optional()
 })
 
 type LinkForm = z.input<typeof linkSchema>
 
 const newLinkState = reactive<LinkForm>({
-  targetUrl: ''
+  targetUrl: '',
+  title: ''
 })
 
 const links = ref<TeamLink[]>([])
@@ -75,6 +78,7 @@ const creatingLink = ref(false)
 const autoLinkAttempted = ref(false)
 const editingLinkId = ref<string | null>(null)
 const editingTargetUrl = ref('')
+const editingTitle = ref('')
 const savingLinkId = ref<string | null>(null)
 const linkModalOpen = ref(false)
 const analyticsSeries = ref<LinkAnalyticsPoint[]>([])
@@ -107,11 +111,13 @@ const totalAnalyticsSeries = computed(() => analyticsSeries.value.map(point => (
 
 const resetLinkForm = () => {
   newLinkState.targetUrl = ''
+  newLinkState.title = ''
 }
 
 const resetInlineEdit = () => {
   editingLinkId.value = null
   editingTargetUrl.value = ''
+  editingTitle.value = ''
   savingLinkId.value = null
 }
 
@@ -175,7 +181,7 @@ onMounted(() => {
 })
 
 const onCreateLink = async (payload: FormSubmitEvent<LinkForm>) => {
-  const created = await createLinkFromUrl(payload.data.targetUrl, { trackState: true })
+  const created = await createLinkFromForm(payload.data, { trackState: true })
   if (created) {
     resetLinkForm()
     linkModalOpen.value = false
@@ -186,12 +192,16 @@ const startInlineEdit = (link: TeamLink) => {
   if (!props.canManage || savingLinkId.value) return
   editingLinkId.value = link.id
   editingTargetUrl.value = link.targetUrl
+  editingTitle.value = link.title || ''
 }
 
 const saveInlineEdit = async (link: TeamLink) => {
   if (!props.teamId || !editingLinkId.value) return
 
-  const parsed = linkSchema.safeParse({ targetUrl: editingTargetUrl.value })
+  const parsed = linkSchema.safeParse({
+    targetUrl: editingTargetUrl.value,
+    title: editingTitle.value
+  })
   if (!parsed.success) {
     const message = parsed.error.errors?.[0]?.message || 'Enter a valid URL'
     toast.add({ title: 'Invalid URL', description: message, color: 'error' })
@@ -203,7 +213,10 @@ const saveInlineEdit = async (link: TeamLink) => {
   try {
     const { error } = await useFetch(`/api/teams/${props.teamId}/links/${link.id}`, {
       method: 'PATCH',
-      body: { targetUrl: parsed.data.targetUrl.trim() },
+      body: {
+        targetUrl: parsed.data.targetUrl.trim(),
+        title: (parsed.data.title || '').toString().trim() || null
+      },
       server: false,
       key: `update-link-${link.id}-${Date.now()}`
     })
@@ -221,7 +234,8 @@ const saveInlineEdit = async (link: TeamLink) => {
 
 const deleteLink = async (link: TeamLink) => {
   if (!props.teamId || !import.meta.client) return
-  const confirmed = window.confirm(`Delete link "${link.targetUrl}"?`)
+  const label = link.title || link.targetUrl
+  const confirmed = window.confirm(`Delete link "${label}"?`)
   if (!confirmed) return
 
   try {
@@ -251,8 +265,8 @@ const openNewLinkModal = () => {
   linkModalOpen.value = true
 }
 
-const createLinkFromUrl = async (
-  targetUrl: string,
+const createLinkFromForm = async (
+  form: LinkForm,
   options: { silent?: boolean, trackState?: boolean } = {}
 ) => {
   const { silent = false, trackState = false } = options
@@ -264,7 +278,7 @@ const createLinkFromUrl = async (
     return false
   }
   if (!props.teamId) return false
-  const parsed = linkSchema.safeParse({ targetUrl })
+  const parsed = linkSchema.safeParse(form)
 
   if (!parsed.success) {
     if (!silent) {
@@ -281,7 +295,10 @@ const createLinkFromUrl = async (
   try {
     const { error } = await useFetch(`/api/teams/${props.teamId}/links`, {
       method: 'POST',
-      body: { targetUrl: parsed.data.targetUrl.trim() },
+      body: {
+        targetUrl: parsed.data.targetUrl.trim(),
+        title: (parsed.data.title || '').toString().trim() || null
+      },
       server: false,
       key: `create-link-${props.teamId}-${Date.now()}`
     })
@@ -323,7 +340,7 @@ const maybeAutoCreateLink = async () => {
   }
 
   autoLinkAttempted.value = true
-  const created = await createLinkFromUrl(stored, { silent: true })
+  const created = await createLinkFromForm({ targetUrl: stored, title: '' }, { silent: true })
 
   if (created) {
     try {
@@ -606,6 +623,12 @@ const copySkipUrl = async (link: TeamLink) => {
                 :title="canManage ? 'Click to edit destination URL' : undefined"
                 @click="startInlineEdit(link)"
               >
+                <p
+                  v-if="link.title"
+                  class="w-full text-sm font-semibold text-neutral-800 dark:text-neutral-100"
+                >
+                  {{ link.title }}
+                </p>
                 <a
                   :href="formatSkipUrlHref(link)"
                   target="_blank"
@@ -637,34 +660,43 @@ const copySkipUrl = async (link: TeamLink) => {
                 class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
                 @submit.prevent="saveInlineEdit(link)"
               >
-                <div class="flex flex-1 flex-wrap items-center gap-2 w-full">
-                  <a
-                    :href="formatSkipUrlHref(link)"
-                    target="_blank"
-                    rel="noreferrer"
-                    class="font-semibold text-sm break-all text-neutral-900 underline-offset-2 hover:underline dark:text-neutral-50"
-                    @click.stop
-                  >
-                    {{ formatSkipUrlText(link) }}
-                  </a>
-                  <UButton
-                    size="xs"
-                    color="neutral"
-                    variant="ghost"
-                    icon="i-lucide-copy"
-                    :title="`Copy ${formatSkipUrlText(link)}`"
-                    :loading="copyingLinkId === link.id"
-                    @click.stop="copySkipUrl(link)"
-                  />
-                  <UIcon
-                    name="i-lucide-arrow-right"
-                    class="text-muted"
-                  />
-                  <UInput
-                    v-model="editingTargetUrl"
-                    class="w-full sm:w-80"
-                    placeholder="https://example.com/landing"
-                  />
+                <div class="flex flex-1 flex-col gap-2">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <a
+                      :href="formatSkipUrlHref(link)"
+                      target="_blank"
+                      rel="noreferrer"
+                      class="font-semibold text-sm break-all text-neutral-900 underline-offset-2 hover:underline dark:text-neutral-50"
+                      @click.stop
+                    >
+                      {{ formatSkipUrlText(link) }}
+                    </a>
+                    <UButton
+                      size="xs"
+                      color="neutral"
+                      variant="ghost"
+                      icon="i-lucide-copy"
+                      :title="`Copy ${formatSkipUrlText(link)}`"
+                      :loading="copyingLinkId === link.id"
+                      @click.stop="copySkipUrl(link)"
+                    />
+                  </div>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <UInput
+                      v-model="editingTitle"
+                      class="w-full sm:w-64"
+                      placeholder="Optional title"
+                    />
+                    <UIcon
+                      name="i-lucide-arrow-right"
+                      class="text-muted"
+                    />
+                    <UInput
+                      v-model="editingTargetUrl"
+                      class="w-full sm:w-80"
+                      placeholder="https://example.com/landing"
+                    />
+                  </div>
                 </div>
                 <div class="flex items-center gap-2">
                   <UButton
@@ -725,6 +757,17 @@ const copySkipUrl = async (link: TeamLink) => {
             :disabled="!canManage"
             @submit="onCreateLink"
           >
+            <UFormGroup
+              label="Title"
+              name="title"
+              description="Optional label to identify this link."
+            >
+              <UInput
+                v-model="newLinkState.title"
+                placeholder="Campaign landing"
+              />
+            </UFormGroup>
+
             <UFormGroup
               label="Target URL"
               name="targetUrl"
