@@ -313,53 +313,35 @@ useSeoMeta({
           />
           {{ message }}
         </div>
+        <template v-else>
+          <InAppBrowserInstructions
+            v-if="shouldShowWebViewWarning && selectedListLink"
+            class="mt-2"
+            :browser-name="browserName"
+            :logo-url="logoUrl || undefined"
+            :team-name="teamName || undefined"
+            :text-color="textColor"
+            :background-color="backgroundColor"
+            :highlight-color="highlightColor"
+            :platform="primaryPlatform"
+            :instruction-image="instructionImage || undefined"
+          />
 
-        <InAppBrowserInstructions
-          v-if="!isListView && status !== 'error' && status !== 'loading'"
-          class="mt-2"
-          :browser-name="browserName"
-          :logo-url="logoUrl || undefined"
-          :team-name="teamName || undefined"
-          :text-color="textColor"
-          :background-color="backgroundColor"
-          :highlight-color="highlightColor"
-          :platform="primaryPlatform"
-          :instruction-image="instructionImage || undefined"
-        />
+          <OpenLinkList
+            v-else
+            :links="listLinksWithHref"
+            :logo-url="logoUrl || undefined"
+            :team-name="teamName || undefined"
+            :text-color="textColor"
+            :highlight-color="highlightColor"
+            :format-target-url="ensureUtmSourceSkipsocial"
+            @select="handleListSelect"
+          />
 
-        <div
-          v-else-if="status === 'list'"
-          class="space-y-4"
-        >
-          <template v-if="shouldShowWebViewWarning && selectedListLink">
-            <div
-              class="rounded-2xl border border-dashed p-4"
-              :style="{ borderColor: highlightColor }"
-            >
-              <InAppBrowserInstructions
-                :browser-name="browserName"
-                :logo-url="logoUrl || undefined"
-                :team-name="teamName || undefined"
-                :text-color="textColor"
-                :background-color="backgroundColor"
-                :highlight-color="highlightColor"
-                :platform="primaryPlatform"
-                :instruction-image="instructionImage || undefined"
-              />
-            </div>
-          </template>
-          <template v-else>
-            <OpenLinkList
-              :links="listLinksWithHref"
-              :logo-url="logoUrl || undefined"
-              :team-name="teamName || undefined"
-              :text-color="textColor"
-              :highlight-color="highlightColor"
-              :format-target-url="ensureUtmSourceSkipsocial"
-              @select="handleListSelect"
-            />
-          </template>
-        </div>
+        </template>
+
+      </div>
+    </div>
 
         <div class="max-w-3xl py-6">
           <div
@@ -384,7 +366,6 @@ useSeoMeta({
           </div>
         </div>
       </div>
-    </div>
 
     <div class="flex justify-center py-6">
       <button
@@ -400,5 +381,5 @@ useSeoMeta({
         />
       </button>
     </div>
-  </div>
+
 </template>
