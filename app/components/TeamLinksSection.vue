@@ -419,11 +419,14 @@ const resolvedTeamSlug = computed(() => {
 })
 
 const skipDomain = 'skip.social/open'
+const teamUrlText = computed(() => `${skipDomain}/${resolvedTeamSlug.value}`)
+const teamUrlHref = computed(() => `https://${teamUrlText.value}`)
 const resolveLinkIdentifier = (link: TeamLink) => link.shortId ?? link.id
 const formatSkipUrlText = (link: TeamLink) => `${skipDomain}/${resolvedTeamSlug.value}-${resolveLinkIdentifier(link)}`
 const formatSkipUrlHref = (link: TeamLink) => `https://${formatSkipUrlText(link)}`
 const { copy } = useClipboard()
 const copyingLinkId = ref<string | null>(null)
+const copyingTeamUrl = ref(false)
 
 const copySkipUrl = async (link: TeamLink) => {
   const url = formatSkipUrlHref(link)
@@ -437,6 +440,21 @@ const copySkipUrl = async (link: TeamLink) => {
     toast.add({ title: 'Copy failed', description: message, color: 'error' })
   } finally {
     copyingLinkId.value = null
+  }
+}
+
+const copyTeamUrl = async () => {
+  const url = teamUrlHref.value
+  copyingTeamUrl.value = true
+
+  try {
+    await copy(url)
+    toast.add({ title: 'Team URL copied', description: url, color: 'neutral' })
+  } catch (error: unknown) {
+    const message = getErrorMessage(error, 'Unable to copy team URL')
+    toast.add({ title: 'Copy failed', description: message, color: 'error' })
+  } finally {
+    copyingTeamUrl.value = false
   }
 }
 </script>
@@ -469,6 +487,50 @@ const copySkipUrl = async (link: TeamLink) => {
         />
       </div>
     </div>
+
+    <UCard>
+      <template #header>
+        <div class="flex flex-col gap-1">
+          <p class="font-semibold">
+            Link settings
+          </p>
+          <p class="text-muted text-sm">
+            Share your team landing page.
+          </p>
+        </div>
+      </template>
+
+      <div class="flex flex-wrap items-center gap-2 text-sm">
+        <span class="text-muted">Team URL</span>
+        <a
+          :href="teamUrlHref"
+          target="_blank"
+          rel="noreferrer"
+          class="font-semibold text-neutral-900 underline-offset-2 hover:underline dark:text-neutral-50"
+        >
+          {{ teamUrlText }}
+        </a>
+        <UButton
+          size="2xs"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-copy"
+          :title="`Copy ${teamUrlText}`"
+          :loading="copyingTeamUrl"
+          @click="copyTeamUrl"
+        />
+        <UButton
+          size="2xs"
+          color="neutral"
+          variant="ghost"
+          icon="i-lucide-external-link"
+          :to="teamUrlHref"
+          target="_blank"
+        >
+          Open
+        </UButton>
+      </div>
+    </UCard>
 
     <UCard>
       <template #header>

@@ -91,42 +91,13 @@ const isListView = computed(() => data.value?.type === 'list')
 const listLinks = computed(() => data.value?.type === 'list' ? data.value.links : [])
 const redirectTargetUrl = computed(() => ensureUtmSourceSkipsocial(singleLink.value?.targetUrl))
 
-const requestedSlug = computed(() => {
-  if (!requestHref.value) return ''
-  try {
-    const parsed = new URL(requestHref.value)
-    const segments = parsed.pathname.split('/').filter(Boolean)
-    return decodeURIComponent(segments[segments.length - 1] || '')
-  } catch {
-    return ''
-  }
-})
-
-const resolvedTeamSlug = computed(() => {
-  const explicit = data.value?.teamSlug?.toString().trim()
-  if (explicit) return explicit
-
-  const slug = requestedSlug.value
-  if (!slug) return ''
-
-  const lastDash = slug.lastIndexOf('-')
-  const suffix = slug.slice(lastDash + 1)
-  const suffixIsNumber = lastDash > 0 && /^[0-9]+$/.test(suffix)
-  return suffixIsNumber ? slug.slice(0, lastDash) : slug
-})
-
-const buildListHref = (link: OpenLinkEntry) => {
-  const slug = resolvedTeamSlug.value
-  if (slug && link.shortId !== null) {
-    return `/open/${encodeURIComponent(slug)}-${link.shortId}`
-  }
-  return `/open/${link.id}`
-}
-
 const listLinksWithHref = computed(() => listLinks.value.map(link => ({
   ...link,
-  href: buildListHref(link)
+  href: ensureUtmSourceSkipsocial(link.targetUrl)
 })))
+
+const selectedListLink = ref<OpenLinkEntry | null>(null)
+const selectedListHref = computed(() => selectedListLink.value ? ensureUtmSourceSkipsocial(selectedListLink.value.targetUrl) : '')
 
 const isLocalhost = computed(() => {
   if (!import.meta.client) return false
@@ -178,6 +149,29 @@ const retry = async () => {
   await refresh()
   await attemptRedirect()
 }
+
+const handleListSelect = async (payload: { link: OpenLinkEntry, href: string }) => {
+  const target = ensureUtmSourceSkipsocial(payload.href || payload.link.targetUrl)
+  if (!target) return
+
+  if (shouldShowWebViewWarning.value) {
+    selectedListLink.value = payload.link
+    return
+  }
+
+  selectedListLink.value = null
+  await navigateTo(target, { external: true, replace: true })
+}
+
+watch(listLinks, () => {
+  selectedListLink.value = null
+})
+
+watch(() => shouldShowWebViewWarning.value, (value) => {
+  if (!value) {
+    selectedListLink.value = null
+  }
+})
 
 const status = computed<'loading' | 'redirecting' | 'warning' | 'error' | 'list'>(() => {
   if (error.value) return 'error'
@@ -347,7 +341,25 @@ useSeoMeta({
             :browser-name="browserName"
             :should-show-web-view-warning="shouldShowWebViewWarning"
             :format-target-url="ensureUtmSourceSkipsocial"
+            @select="handleListSelect"
           />
+
+          <div
+            v-if="shouldShowWebViewWarning && selectedListLink && selectedListHref"
+            class="rounded-2xl border border-dashed p-4"
+            :style="{ borderColor: highlightColor }"
+          >
+            <InAppBrowserInstructions
+              :browser-name="browserName"
+              :logo-url="logoUrl || undefined"
+              :team-name="teamName || undefined"
+              :text-color="textColor"
+              :background-color="backgroundColor"
+              :highlight-color="highlightColor"
+              :platform="primaryPlatform"
+              :instruction-image="instructionImage || undefined"
+            />
+          </div>
         </div>
 
         <div class="max-w-3xl py-6">

@@ -18,20 +18,14 @@ const props = defineProps<{
   formatTargetUrl?: (url: string) => string
 }>()
 
+const emit = defineEmits<{
+  (e: 'select', payload: { link: LinkEntry, href: string }): void
+}>()
+
 const accentColor = computed(() => props.highlightColor?.trim() || '#f97316')
 const resolvedTextColor = computed(() => props.textColor?.trim() || undefined)
 const heading = computed(() => props.teamName?.trim() || 'Links')
 const warningBrowserName = computed(() => props.browserName?.trim() || 'your browser')
-
-const onLinkClick = async (href: string) => {
-  await navigateTo(href)
-}
-
-const linksWithDisplay = computed(() => props.links.map(link => ({
-  ...link,
-  displayTitle: formatLinkTitle(link),
-  displayUrl: formatDisplayUrl(link.targetUrl)
-})))
 
 const formatDisplayUrl = (rawUrl?: string | null) => {
   const formatted = props.formatTargetUrl ? props.formatTargetUrl(rawUrl || '') : rawUrl
@@ -65,6 +59,22 @@ const extractDomain = (rawUrl?: string | null) => {
 }
 
 const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1)
+
+const linksWithDisplay = computed(() => props.links.map(link => {
+  const displayUrl = formatDisplayUrl(link.targetUrl)
+  return {
+    ...link,
+    displayTitle: formatLinkTitle(link),
+    displayUrl
+  }
+}))
+
+const onLinkClick = async (link: LinkEntry & { displayUrl?: string }) => {
+  const target = link.displayUrl || formatDisplayUrl(link.targetUrl) || link.href
+  if (!target) return
+
+  emit('select', { link, href: target })
+}
 </script>
 
 <template>
@@ -109,8 +119,8 @@ const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slic
       <a
         v-for="link in linksWithDisplay"
         :key="link.id"
-        :href="link.href"
-        @click.prevent="onLinkClick(link.href)"
+        :href="link.displayUrl || link.targetUrl || link.href"
+        @click.prevent="onLinkClick(link)"
         class="group block rounded-xl border border-dashed p-4 transition hover:-translate-y-0.5 hover:border-neutral-400 hover:bg-white/70 dark:hover:border-neutral-600 dark:hover:bg-neutral-900/50"
         :style="{ borderColor: resolvedTextColor || undefined }"
       >
@@ -118,9 +128,6 @@ const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slic
           <div class="space-y-1">
             <p class="font-semibold leading-tight">
               {{ link.displayTitle }}
-            </p>
-            <p class="break-all text-sm opacity-80">
-              {{ link.displayUrl }}
             </p>
           </div>
           <UIcon
