@@ -189,7 +189,7 @@ const status = computed<'loading' | 'redirecting' | 'warning' | 'error' | 'list'
 
 const message = computed(() => {
   if (status.value === 'loading') return 'Looking up your Skip link...'
-  if (status.value === 'list') return 'Choose a link to continue.'
+  if (status.value === 'list') return ''
   if (status.value === 'redirecting') return 'Redirecting you to your destination...'
   if (status.value === 'warning') return 'Open this page in your system browser to continue.'
   const rawError = error.value
@@ -338,61 +338,16 @@ useSeoMeta({
           v-else-if="status === 'list'"
           class="space-y-4"
         >
-          <div class="flex items-center gap-3">
-            <img
-              v-if="logoUrl"
-              :src="logoUrl"
-              class="h-12 w-12 rounded-xl bg-white object-contain p-2 shadow-sm"
-              alt=""
-            />
-            <div>
-              <p class="text-xl font-semibold">
-                {{ teamName || 'Links' }}
-              </p>
-              <p class="text-sm opacity-80">
-                {{ message }}
-              </p>
-            </div>
-          </div>
-
-          <div
-            v-if="shouldShowWebViewWarning"
-            class="rounded-lg border px-4 py-3 text-sm"
-            :style="{
-              borderColor: highlightColor || textColor,
-              backgroundColor: `${highlightColor || textColor}10`
-            }"
-          >
-            You are in an in-app browser. Open in {{ browserName }} for the smoothest experience, then pick a link below.
-          </div>
-
-          <div class="grid gap-3">
-            <a
-              v-for="link in listLinksWithHref"
-              :key="link.id"
-              :href="link.href"
-              class="group block rounded-xl border border-dashed p-4 transition hover:-translate-y-0.5 hover:border-neutral-400 hover:bg-white/70 dark:hover:border-neutral-600 dark:hover:bg-neutral-900/50"
-              :style="{ borderColor: textColor }"
-            >
-              <div class="flex items-start justify-between gap-3">
-                <div class="space-y-1">
-                  <p class="font-semibold leading-tight">
-                    {{ link.title || `Link ${link.shortId ?? ''}` || 'Link' }}
-                  </p>
-                  <p class="text-sm break-all opacity-80">
-                    {{ ensureUtmSourceSkipsocial(link.targetUrl) }}
-                  </p>
-                </div>
-                <UIcon
-                  name="i-lucide-arrow-up-right"
-                  class="text-muted transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                />
-              </div>
-              <p class="mt-2 text-xs opacity-70">
-                Opens via Skip to keep tracking and UTM tags.
-              </p>
-            </a>
-          </div>
+          <OpenLinkList
+            :links="listLinksWithHref"
+            :logo-url="logoUrl || undefined"
+            :team-name="teamName || undefined"
+            :text-color="textColor"
+            :highlight-color="highlightColor"
+            :browser-name="browserName"
+            :should-show-web-view-warning="shouldShowWebViewWarning"
+            :format-target-url="ensureUtmSourceSkipsocial"
+          />
         </div>
 
         <div class="max-w-3xl py-6">
