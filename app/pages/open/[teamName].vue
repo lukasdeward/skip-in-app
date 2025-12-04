@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { BrowserDetection } from '~~/composables/useBrowserRedirect'
 import { useBrowserRedirect } from '~~/composables/useBrowserRedirect'
+
 const instructionImages = {
   tiktok: '/instructions/tiktok.png',
   instagram: '/instructions/instagram.png',
@@ -54,6 +55,7 @@ const { detectInAppBrowser, redirectToSystemBrowser } = useBrowserRedirect()
 const shouldShowWebViewWarning = ref(false)
 const browserName = ref('Safari')
 const detected = ref<BrowserDetection | null>(null)
+const activeRedirectTarget = ref('')
 
 const {
   data,
@@ -96,43 +98,62 @@ const listLinksWithHref = computed(() => listLinks.value.map(link => ({
   href: ensureUtmSourceSkipsocial(link.targetUrl)
 })))
 
-const selectedListLink = ref<OpenLinkEntry | null>(null)
-
 const isLocalhost = computed(() => {
   if (!import.meta.client) return false
   const host = window.location.hostname
   return host === 'localhost' || host === '127.0.0.1' || host === '[::1]'
 })
 
-const attemptRedirect = async (force = false) => {
-  if (!singleLink.value) return
-  // Never auto-redirect when debugging locally to keep the interstitial visible.
-  if (!force && isLocalhost.value) return
-  if (!redirectTargetUrl.value) return
+const resetRedirectState = () => {
+  activeRedirectTarget.value = ''
+}
 
-  if (detected.value?.isWebView) {
-    redirectToSystemBrowser(redirectTargetUrl.value, detected.value)
+const resolveDetection = () => {
+  const info = detectInAppBrowser()
+  detected.value = info
+  browserName.value = info.isIOS ? 'Safari' : 'Chrome'
+  shouldShowWebViewWarning.value = info.isWebView
+  return info
+}
+
+const startRedirectFlow = async (
+  targetUrl?: string | null,
+  options: { allowLocalhost?: boolean } = {}
+) => {
+  const url = ensureUtmSourceSkipsocial(targetUrl)
+  if (!url) return
+
+  activeRedirectTarget.value = url
+
+  const info = resolveDetection()
+  if (isLocalhost.value && !options.allowLocalhost) return
+  if (!import.meta.client) return
+
+  if (info.isWebView) {
+    redirectToSystemBrowser(url, info)
     return
   }
 
-  await navigateTo(redirectTargetUrl.value, { external: true, replace: true })
+  await navigateTo(url, { external: true, replace: true })
+}
+
+const maybeAutoRedirect = async () => {
+  if (isListView.value) {
+    resetRedirectState()
+    return
+  }
+
+  if (!redirectTargetUrl.value) {
+    resetRedirectState()
+    return
+  }
+
+  await startRedirectFlow(redirectTargetUrl.value)
 }
 
 onMounted(() => {
-  const info = detectInAppBrowser()
-  detected.value = info
-  showDiagnostics.value = false
-
-  if (info.isWebView) {
-    browserName.value = info.isIOS ? 'Safari' : 'Chrome'
-    shouldShowWebViewWarning.value = true
-
-    if (!isLocalhost.value && redirectTargetUrl.value) {
-      redirectToSystemBrowser(redirectTargetUrl.value, info)
-    }
-  } else {
-    attemptRedirect()
-  }
+  resolveDetection()
+  maybeAutoRedirect()
 })
 
 watch(
@@ -140,51 +161,39 @@ watch(
   async (value, oldValue) => {
     if (!value || value === oldValue) return
     await refresh()
-    await attemptRedirect()
+    resolveDetection()
+    await maybeAutoRedirect()
   }
 )
-
-const retry = async () => {
-  await refresh()
-  await attemptRedirect()
-}
 
 const handleListSelect = async (payload: { link: OpenLinkEntry, href: string }) => {
   const target = ensureUtmSourceSkipsocial(payload.href || payload.link.targetUrl)
   if (!target) return
 
-  if (shouldShowWebViewWarning.value) {
-    selectedListLink.value = payload.link
-    return
-  }
-
-  selectedListLink.value = null
-  await navigateTo(target, { external: true, replace: true })
+  await startRedirectFlow(target, { allowLocalhost: true })
 }
 
 watch(listLinks, () => {
-  selectedListLink.value = null
-})
-
-watch(() => shouldShowWebViewWarning.value, (value) => {
-  if (!value) {
-    selectedListLink.value = null
+  if (isListView.value) {
+    resetRedirectState()
   }
 })
+
+const showInAppRedirect = computed(() => shouldShowWebViewWarning.value && !!activeRedirectTarget.value)
 
 const status = computed<'loading' | 'redirecting' | 'warning' | 'error' | 'list'>(() => {
   if (error.value) return 'error'
   if (pending.value) return 'loading'
+  if (showInAppRedirect.value) return 'warning'
   if (isListView.value) return 'list'
-  if (shouldShowWebViewWarning.value) return 'warning'
   return 'redirecting'
 })
 
 const message = computed(() => {
   if (status.value === 'loading') return 'Looking up your Skip link...'
-  if (status.value === 'list') return ''
   if (status.value === 'redirecting') return 'Redirecting you to your destination...'
   if (status.value === 'warning') return 'Open this page in your system browser to continue.'
+  if (status.value === 'list') return ''
   const rawError = error.value
 
   if (rawError && typeof rawError === 'object') {
@@ -240,7 +249,7 @@ const primaryPlatform = computed(() => {
 })
 
 const instructionImage = computed(() => {
-  if (!detected.value || !shouldShowWebViewWarning.value) return null
+  if (!detected.value || !showInAppRedirect.value) return null
 
   const options = [
     { active: detected.value.isTikTok, key: 'tiktok' },
@@ -264,7 +273,6 @@ const detectedLabels = computed(() => {
     { label: 'UA brands', value: detected.value.brands.join(', ') || 'None' }
   ]
 })
-
 
 const logoUrl = computed(() => data.value?.logoUrl)
 const teamName = computed(() => data.value?.teamName)
@@ -294,7 +302,6 @@ useSeoMeta({
       class="max-w-5xl mx-auto w-full px-4 pt-6 space-y-6"
       :style="{ color: textColor }"
     >
-
       <div class="space-y-8">
         <div
           v-if="status === 'error'"
@@ -304,18 +311,13 @@ useSeoMeta({
         </div>
 
         <div
-          v-else-if="status === 'loading'"
-          class="flex items-center gap-2 text-sm opacity-80"
+          v-else-if="status === 'warning'"
+          class="space-y-3 text-sm"
         >
-          <UIcon
-            name="i-lucide-loader-2"
-            class="h-5 w-5 animate-spin"
-          />
-          {{ message }}
-        </div>
-        <template v-else>
+          <p class="opacity-80">
+            {{ message }}
+          </p>
           <InAppBrowserInstructions
-            v-if="shouldShowWebViewWarning && selectedListLink"
             class="mt-2"
             :browser-name="browserName"
             :logo-url="logoUrl || undefined"
@@ -326,46 +328,54 @@ useSeoMeta({
             :platform="primaryPlatform"
             :instruction-image="instructionImage || undefined"
           />
+        </div>
 
-          <OpenLinkList
-            v-else
-            :links="listLinksWithHref"
-            :logo-url="logoUrl || undefined"
-            :team-name="teamName || undefined"
-            :text-color="textColor"
-            :highlight-color="highlightColor"
-            :format-target-url="ensureUtmSourceSkipsocial"
-            @select="handleListSelect"
+        <OpenLinkList
+          v-else-if="status === 'list'"
+          :links="listLinksWithHref"
+          :logo-url="logoUrl || undefined"
+          :team-name="teamName || undefined"
+          :text-color="textColor"
+          :highlight-color="highlightColor"
+          :format-target-url="ensureUtmSourceSkipsocial"
+          @select="handleListSelect"
+        />
+
+        <div
+          v-else
+          class="flex items-center gap-2 text-sm opacity-80"
+        >
+          <UIcon
+            name="i-lucide-loader-2"
+            class="h-5 w-5 animate-spin"
           />
-
-        </template>
-
+          {{ message }}
+        </div>
       </div>
     </div>
 
-        <div class="max-w-3xl py-6">
+    <div class="max-w-3xl py-6">
+      <div
+        v-if="showDiagnostics && detectedLabels.length > 0"
+        class="mt-6 space-y-2 text-sm"
+        :style="{ color: textColor }"
+      >
+        <p class="font-semibold">
+          WebView diagnostics
+        </p>
+        <div class="grid grid-cols-1 gap-2">
           <div
-            v-if="showDiagnostics && detectedLabels.length > 0"
-            class="mt-6 space-y-2 text-sm"
-            :style="{ color: textColor }"
+            v-for="item in detectedLabels"
+            :key="item.label"
+            class="flex flex-col sm:flex-row sm:items-start sm:gap-2 border border-dashed rounded-lg p-3"
+            :style="{ borderColor: textColor }"
           >
-            <p class="font-semibold">
-              WebView diagnostics
-            </p>
-            <div class="grid grid-cols-1 gap-2">
-              <div
-                v-for="item in detectedLabels"
-                :key="item.label"
-                class="flex flex-col sm:flex-row sm:items-start sm:gap-2 border border-dashed rounded-lg p-3"
-                :style="{ borderColor: textColor }"
-              >
-                <span class="w-32 shrink-0 opacity-80">{{ item.label }}</span>
-                <span class="break-all">{{ item.value }}</span>
-              </div>
-            </div>
+            <span class="w-32 shrink-0 opacity-80">{{ item.label }}</span>
+            <span class="break-all">{{ item.value }}</span>
           </div>
         </div>
       </div>
+    </div>
 
     <div class="flex justify-center py-6">
       <button
@@ -381,5 +391,5 @@ useSeoMeta({
         />
       </button>
     </div>
-
+  </div>
 </template>
