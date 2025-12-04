@@ -310,14 +310,9 @@ useSeoMeta({
           {{ message }}
         </div>
 
-        <div
-          v-else-if="status === 'warning'"
-          class="space-y-3 text-sm"
-        >
-          <p class="opacity-80">
-            {{ message }}
-          </p>
+
           <InAppBrowserInstructions
+            v-else-if="status === 'warning'"
             class="mt-2"
             :browser-name="browserName"
             :logo-url="logoUrl || undefined"
@@ -328,7 +323,6 @@ useSeoMeta({
             :platform="primaryPlatform"
             :instruction-image="instructionImage || undefined"
           />
-        </div>
 
         <OpenLinkList
           v-else-if="status === 'list'"
