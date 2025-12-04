@@ -97,7 +97,6 @@ const listLinksWithHref = computed(() => listLinks.value.map(link => ({
 })))
 
 const selectedListLink = ref<OpenLinkEntry | null>(null)
-const selectedListHref = computed(() => selectedListLink.value ? ensureUtmSourceSkipsocial(selectedListLink.value.targetUrl) : '')
 
 const isLocalhost = computed(() => {
   if (!import.meta.client) return false
@@ -332,34 +331,34 @@ useSeoMeta({
           v-else-if="status === 'list'"
           class="space-y-4"
         >
-          <OpenLinkList
-            :links="listLinksWithHref"
-            :logo-url="logoUrl || undefined"
-            :team-name="teamName || undefined"
-            :text-color="textColor"
-            :highlight-color="highlightColor"
-            :browser-name="browserName"
-            :should-show-web-view-warning="shouldShowWebViewWarning"
-            :format-target-url="ensureUtmSourceSkipsocial"
-            @select="handleListSelect"
-          />
-
-          <div
-            v-if="shouldShowWebViewWarning && selectedListLink && selectedListHref"
-            class="rounded-2xl border border-dashed p-4"
-            :style="{ borderColor: highlightColor }"
-          >
-            <InAppBrowserInstructions
-              :browser-name="browserName"
+          <template v-if="shouldShowWebViewWarning && selectedListLink">
+            <div
+              class="rounded-2xl border border-dashed p-4"
+              :style="{ borderColor: highlightColor }"
+            >
+              <InAppBrowserInstructions
+                :browser-name="browserName"
+                :logo-url="logoUrl || undefined"
+                :team-name="teamName || undefined"
+                :text-color="textColor"
+                :background-color="backgroundColor"
+                :highlight-color="highlightColor"
+                :platform="primaryPlatform"
+                :instruction-image="instructionImage || undefined"
+              />
+            </div>
+          </template>
+          <template v-else>
+            <OpenLinkList
+              :links="listLinksWithHref"
               :logo-url="logoUrl || undefined"
               :team-name="teamName || undefined"
               :text-color="textColor"
-              :background-color="backgroundColor"
               :highlight-color="highlightColor"
-              :platform="primaryPlatform"
-              :instruction-image="instructionImage || undefined"
+              :format-target-url="ensureUtmSourceSkipsocial"
+              @select="handleListSelect"
             />
-          </div>
+          </template>
         </div>
 
         <div class="max-w-3xl py-6">

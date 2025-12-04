@@ -13,8 +13,6 @@ const props = defineProps<{
   teamName?: string | null
   textColor?: string | null
   highlightColor?: string | null
-  browserName?: string | null
-  shouldShowWebViewWarning?: boolean
   formatTargetUrl?: (url: string) => string
 }>()
 
@@ -22,10 +20,8 @@ const emit = defineEmits<{
   (e: 'select', payload: { link: LinkEntry, href: string }): void
 }>()
 
-const accentColor = computed(() => props.highlightColor?.trim() || '#f97316')
 const resolvedTextColor = computed(() => props.textColor?.trim() || undefined)
 const heading = computed(() => props.teamName?.trim() || 'Links')
-const warningBrowserName = computed(() => props.browserName?.trim() || 'your browser')
 
 const formatDisplayUrl = (rawUrl?: string | null) => {
   const formatted = props.formatTargetUrl ? props.formatTargetUrl(rawUrl || '') : rawUrl
@@ -82,14 +78,6 @@ const onLinkClick = async (link: LinkEntry & { displayUrl?: string }) => {
     class="relative space-y-4"
     :style="{ color: resolvedTextColor || undefined }"
   >
-    <UIcon
-      name="i-typcn-arrow-back"
-      v-if="shouldShowWebViewWarning"
-      class="absolute -top-2 right-2 h-20 w-20 -rotate-270"
-      :style="{ color: accentColor }"
-      aria-hidden="true"
-    />
-
     <div class="flex flex-col gap-4">
       <div class="flex items-center justify-center gap-3">
         <img
@@ -102,17 +90,6 @@ const onLinkClick = async (link: LinkEntry & { displayUrl?: string }) => {
       <h2 class="mt-5 text-center text-2xl font-bold">
         {{ heading }}
       </h2>
-    </div>
-
-    <div
-      v-if="shouldShowWebViewWarning"
-      class="rounded-lg border px-4 py-3 text-sm"
-      :style="{
-        borderColor: accentColor,
-        backgroundColor: `${accentColor}10`
-      }"
-    >
-      You are in an in-app browser. Open in {{ warningBrowserName }} for the smoothest experience, then pick a link below.
     </div>
 
     <div class="grid gap-3">
