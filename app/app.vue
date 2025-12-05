@@ -56,6 +56,8 @@ const links = [{
       <NuxtPage />
     </NuxtLayout>
 
+    <CookieConsentBanner />
+
     <ClientOnly>
       <LazyUContentSearch
         :files="files"

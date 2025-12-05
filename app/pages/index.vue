@@ -10,7 +10,7 @@ const browserFeatureRows = [
   { feature: 'Multiple tabs for product comparison', inApp: '❌', native: '✅' },
   { feature: 'Forms & payments autofill available', inApp: '❌', native: '✅' },
   { feature: 'Browsing history for "Buy Later"', inApp: '❌', native: '✅' },
-  { feature: 'Cookie availability', inApp: '✅', native: '✅' },
+  { feature: 'Cookie availability', inApp: '❌', native: '✅' },
   { feature: 'Push notifications availability', inApp: '❌', native: '✅' },
   { feature: 'Retargeting availability', inApp: '❌', native: '✅' },
   { feature: 'Exposure to Google from Social Media', inApp: '❌', native: '✅' }
