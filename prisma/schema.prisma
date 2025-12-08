@@ -93,3 +93,11 @@ enum DeviceType {
   MOBILE
   BOT
 }
+
+model LandingUrlLog {
+  id        String   @id @default(cuid())
+  url       String
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+}

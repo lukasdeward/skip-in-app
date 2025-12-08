@@ -27,17 +27,31 @@ useSeoMeta({
   ogDescription: description
 })
 
-function onSubmitLink() {
-  const query = userUrl.value ? { url: userUrl.value } : {}
+const logUrlSubmission = async (url: string) => {
+  try {
+    await $fetch('/api/landing/url-log', {
+      method: 'POST',
+      body: { url }
+    })
+  } catch (error) {
+    console.warn('[landing] Failed to log url submission', error)
+  }
+}
+
+async function onSubmitLink() {
+  const trimmed = userUrl.value?.trim()
+  const query = trimmed ? { url: trimmed } : {}
   router.replace({ query })
   showSignup.value = true
 
-  if (import.meta.client && userUrl.value) {
+  if (import.meta.client && trimmed) {
     try {
-      localStorage.setItem('landing:last-url', userUrl.value.trim())
+      localStorage.setItem('landing:last-url', trimmed)
     } catch (error) {
       console.error('[landing] Failed to persist url', error)
     }
+
+    logUrlSubmission(trimmed)
   }
 }
 </script>

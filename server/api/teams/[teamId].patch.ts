@@ -3,6 +3,7 @@ import { TeamRole } from '@prisma/client'
 import prisma from '~~/server/utils/prisma'
 import { generateUniqueTeamSlug } from '~~/server/utils/teamSlug'
 import { requireUser } from '~~/server/utils/auth'
+import { getStripeClient } from '~~/server/utils/stripe'
 
 export default defineEventHandler(async (event) => {
   const { customerId } = await requireUser(event)
@@ -17,6 +18,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody<{
+    action?: string
     name?: string
     slug?: string | null
     backgroundColor?: string | null
@@ -30,11 +32,42 @@ export default defineEventHandler(async (event) => {
 
   try {
     const membership = await prisma.teamMember.findUnique({
-      where: { teamId_customerId: { teamId, customerId } }
+      where: { teamId_customerId: { teamId, customerId } },
+      include: { team: true }
     })
 
     if (!membership) {
       throw createError({ statusCode: 404, message: 'Team not found' })
+    }
+
+    const action = body.action?.toString()
+
+    if (action === 'deleteTeam') {
+      if (membership.role !== TeamRole.OWNER) {
+        throw createError({ statusCode: 403, message: 'Only the owner can delete this team' })
+      }
+
+      const subscriptionId = membership.team?.stripeSubscriptionId
+      let subscriptionCancelled = false
+
+      if (subscriptionId && !subscriptionId.startsWith('temp_') && process.env.NUXT_STRIPE_SECRET) {
+        try {
+          const stripe = getStripeClient()
+          await stripe.subscriptions.cancel(subscriptionId)
+          subscriptionCancelled = true
+        } catch (error) {
+          console.error('[teams.id.patch] Failed to cancel Stripe subscription', error)
+        }
+      }
+
+      await prisma.$transaction([
+        prisma.linkAnalytics.deleteMany({ where: { teamId } }),
+        prisma.link.deleteMany({ where: { teamId } }),
+        prisma.teamMember.deleteMany({ where: { teamId } }),
+        prisma.team.delete({ where: { id: teamId } })
+      ])
+
+      return { success: true, subscriptionCancelled }
     }
 
     if (membership.role === TeamRole.MEMBER) {

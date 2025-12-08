@@ -2,7 +2,9 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
-const props = defineProps<{
+type TeamRole = 'OWNER' | 'ADMIN' | 'MEMBER'
+
+const props = withDefaults(defineProps<{
   teamId: string
   team: {
     id: string
@@ -14,13 +16,17 @@ const props = defineProps<{
     highlightColor?: string | null
   }
   canManage: boolean
-}>()
+  viewerRole?: TeamRole
+}>(), {
+  viewerRole: 'MEMBER'
+})
 
 const emit = defineEmits<{
   (e: 'updated'): void
 }>()
 
 const toast = useToast()
+const router = useRouter()
 const fallbackBackgroundColor = '#020618'
 const fallbackTextColor = '#ffffff'
 const fallbackHighlightColor = '#f97316'
@@ -52,6 +58,7 @@ const settingsState = reactive<SettingsForm>({
 })
 
 const savingSettings = ref(false)
+const deletingTeam = ref(false)
 
 const buildDefaultHandle = (value: string) => {
   return value.toLowerCase().replace(/[^a-z0-9]/g, '') || 'team'
@@ -70,6 +77,7 @@ const previewHighlightColor = computed(() => settingsState.highlightColor?.trim(
   || fallbackHighlightColor)
 
 const previewTeamName = computed(() => settingsState.name?.trim() || props.team.name)
+const isOwner = computed(() => props.viewerRole === 'OWNER')
 
 watch(() => settingsState.slug, (value) => {
   const normalized = value?.toLowerCase() || ''
@@ -180,6 +188,28 @@ const removeLogo = async () => {
   } catch (error: any) {
     const message = error?.data?.message || error?.message || 'Unable to remove logo'
     toast.add({ title: 'Remove failed', description: message, color: 'error' })
+  }
+}
+
+const deleteTeam = async () => {
+  if (!props.teamId || !import.meta.client) return
+  const confirmed = window.confirm('Delete this team? This will remove all links, analytics, and members.')
+  if (!confirmed) return
+
+  deletingTeam.value = true
+
+  try {
+    await $fetch(`/api/teams/${props.teamId}`, {
+      method: 'PATCH',
+      body: { action: 'deleteTeam' }
+    })
+    toast.add({ title: 'Team deleted', description: 'All links and analytics removed.', color: 'success' })
+    await router.push('/dashboard')
+  } catch (error: any) {
+    const message = error?.data?.message || error?.message || 'Unable to delete team'
+    toast.add({ title: 'Delete failed', description: message, color: 'error' })
+  } finally {
+    deletingTeam.value = false
   }
 }
 
@@ -380,8 +410,8 @@ watch(() => props.teamId, () => {
       </UCard>
     </div>
 
-    <div class="lg:col-span-1">
-      <UCard class="lg:sticky lg:top-4">
+    <div class="lg:col-span-1 lg:sticky lg:top-4 space-y-4">
+      <UCard>
         <template #header>
           <div class="flex items-center justify-between">
             <p class="font-semibold">
@@ -413,6 +443,34 @@ watch(() => props.teamId, () => {
               :logo-url="team.logoUrl || undefined"
             />
           </div>
+        </div>
+      </UCard>
+
+      <UCard
+        v-if="isOwner"
+        class="border-red-200 bg-red-50/60 dark:border-red-900/50 dark:bg-red-950/20"
+      >
+        <template #header>
+          <div class="flex items-center justify-between">
+            <p class="font-semibold text-red-600 dark:text-red-400">
+              Danger zone
+            </p>
+          </div>
+        </template>
+
+        <div class="space-y-3">
+          <p class="text-sm text-muted">
+            Delete this team and permanently remove all links, analytics, and members. This cannot be undone.
+          </p>
+          <UButton
+            color="error"
+            icon="i-lucide-trash-2"
+            :loading="deletingTeam"
+            :disabled="deletingTeam"
+            @click="deleteTeam"
+          >
+            Delete team
+          </UButton>
         </div>
       </UCard>
     </div>

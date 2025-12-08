@@ -204,6 +204,7 @@ watch(teamId, () => {
             :team-id="team.id"
             :team="team"
             :can-manage="canManageTeam"
+            :viewer-role="team.role"
             @updated="handleTeamUpdated"
           />
         </div>
